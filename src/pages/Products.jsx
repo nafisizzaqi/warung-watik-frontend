@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../api/axios";
-import Layout from "../components/Layout";
+import Layout from "../components/Layout/Layout";
 import ProductCard from "../components/ProductCard";
 
 export default function Products() {

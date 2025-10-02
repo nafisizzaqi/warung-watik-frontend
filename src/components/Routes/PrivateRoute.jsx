@@ -1,5 +1,5 @@
 import { Navigate } from "react-router-dom";
-import Spinner from "./Effect/Spinner";
+import Spinner from "../Effect/Spinner";
 
 function PrivateRoute({ user, children, loading }) {
   if (loading) {

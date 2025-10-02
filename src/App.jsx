@@ -6,7 +6,7 @@ import Cart from "./pages/Cart";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import api from "./api/axios";
-import PrivateRoute from "./components/PrivateRoute";
+import PrivateRoute from "./components/Routes/PrivateRoute";
 
 function App() {
   const [user, setUser] = useState(null);
