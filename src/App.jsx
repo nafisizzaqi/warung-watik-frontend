@@ -10,6 +10,7 @@ import PrivateRoute from "./components/PrivateRoute";
 
 function App() {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const checkAuth = () => {
     const savedUser = localStorage.getItem("user");
@@ -18,6 +19,7 @@ function App() {
     } else {
       setUser(null);
     }
+    setLoading(false);
   };
 
   const handleLogin = () => checkAuth();
@@ -54,7 +56,7 @@ function App() {
         <Route
           path="/products"
           element={
-            <PrivateRoute user={user}>
+            <PrivateRoute user={user} loading={loading}>
               <Products onAddToCart={handleAddToCart} />
             </PrivateRoute>
           }

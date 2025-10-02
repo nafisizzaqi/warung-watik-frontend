@@ -7,7 +7,8 @@ export default function Cart() {
   const [cartItems, setCartItems] = useState([]);
 
   const fetchCart = () => {
-    api.get("/cart").then(res => setCartItems(res.data));
+    api.get("/customer/cart").then(res => setCartItems(res.data));
+    console.log(cartItems);
   };
 
   useEffect(() => {
