@@ -15,7 +15,7 @@ export default function Layout({ children }) {
       </div>
 
       {/* Konten utama */}
-      <main className="flex-1 p-6 bg-gray-50">
+      <main className="flex-1 p-6 bg-[#730302]">
         {children}
       </main>
 
