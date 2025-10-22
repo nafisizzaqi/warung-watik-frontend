@@ -1,9 +1,10 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Home from "./pages/Home";
 import Products from "./pages/Products";
 import Cart from "./pages/Cart";
 import Login from "./pages/Login";
+import Layout from "./components/Layout/Layout";
 import Register from "./pages/Register";
 import api from "./api/axios";
 import PrivateRoute from "./components/Routes/PrivateRoute";
@@ -14,76 +15,124 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [cart, setCart] = useState([]);
   const [cartOpen, setCartOpen] = useState(false);
+  const [cartLoading, setCartLoading] = useState(false); // untuk skeleton loader
 
-  // Sync cart dari backend
-  const fetchCart = async () => {
+  // Fetch cart
+  const fetchCart = useCallback(async () => {
     try {
+      setCartLoading(true);
       const res = await api.get("/customer/cart");
-      setCart(res.data);
+      if (res.data.success && res.data.data?.items) {
+        setCart(res.data.data.items);
+      } else {
+        setCart([]);
+      }
     } catch (err) {
-      console.error("Gagal fetch cart:", err);
+      setCart([]);
+    } finally {
+      setCartLoading(false);
+    }
+  }, []);
+
+  // Buka drawer langsung, fetch di background
+  const handleOpenCart = () => {
+    setCartOpen(true);   // drawer langsung muncul
+    fetchCart();         // fetch cart di background
+  };
+
+  const handleCloseCart = () => setCartOpen(false);
+
+  // Add to cart
+  const addToCart = async (product) => {
+    try {
+      await api.post("/customer/cart/items", {
+        product_id: product.id,
+        quantity: 1,
+        price: product.price,
+      });
+      fetchCart(); // refresh cart setelah tambah
+      toast.success(`${product.name} berhasil ditambahkan ke cart!`);
+    } catch (err) {
+      console.error("Cart error:", err.response?.data || err.message);
+      toast.error(`Gagal menambahkan ${product.name} ke cart.`);
     }
   };
 
-const addToCart = async (product) => {
-  try {
-    // kirim ke backend
-    await api.post("/cart", { product_id: product.id });
-    
-    // update frontend langsung
-    setCart(prev => [...prev, product]);
-
-    toast.success(`${product.name} berhasil ditambahkan ke cart!`);
-  } catch (err) {
-    console.error(err);
-    toast.error(`Gagal menambahkan ${product.name} ke cart.`);
-  }
-};
-
-
-  const checkAuth = () => {
+  // Cek auth
+  const checkAuth = useCallback(() => {
     const savedUser = localStorage.getItem("user");
     if (savedUser) setUser(JSON.parse(savedUser));
     else setUser(null);
     setLoading(false);
-  };
-
-  const handleLogin = () => checkAuth();
-  const handleLogout = async () => {
-    await api.post("/logout");
-    setUser(null);
-  };
-
-  useEffect(() => {
-    checkAuth();
-    fetchCart(); // ambil cart saat page pertama kali load
   }, []);
+
+  const handleLogin = async () => {
+    checkAuth();
+    fetchCart();
+  };
+
+  const handleLogout = async () => {
+    try {
+      await api.post("/customer/logout");
+      localStorage.removeItem("user");
+      setUser(null);
+      setCart([]);
+      toast.success("Logout berhasil!");
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+  };
+
+  useEffect(() => { checkAuth(); }, [checkAuth]);
+  useEffect(() => { if (user) fetchCart(); }, [user, fetchCart]);
+
+  if (loading) return <div className="text-center p-10">Loading...</div>;
 
   return (
     <Router>
       <Toaster position="top-right" />
+
       <Routes>
         <Route path="/login" element={<Login onLogin={handleLogin} />} />
         <Route path="/register" element={<Register />} />
 
-        <Route path="/" element={
-          <PrivateRoute user={user}>
-            <Home user={user} onLogout={handleLogout} />
-          </PrivateRoute>
-        } />
+        <Route
+          path="/"
+          element={
+            <PrivateRoute user={user}>
+              <Layout
+                user={user}
+                onLogout={handleLogout}
+                onCartClick={handleOpenCart}
+              >
+                <Home user={user} />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
 
-        <Route path="/products" element={
-          <PrivateRoute user={user} loading={loading}>
-            <Products onAddToCart={addToCart} />
-          </PrivateRoute>
-        } />
-
-        <Route path="/cart" element={
-          <PrivateRoute user={user}>
-            <Cart isOpen={cartOpen} onClose={() => setCartOpen(false)} cart={cart} />
-          </PrivateRoute>
-        } />
+        <Route
+          path="/products"
+          element={
+            <PrivateRoute user={user}>
+              <Layout
+                user={user}
+                onLogout={handleLogout}
+                onCartClick={handleOpenCart}
+              >
+                <Products onAddToCart={addToCart} />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
       </Routes>
+
+      <Cart
+        isOpen={cartOpen}
+        onClose={handleCloseCart}
+        cart={cart}
+        loading={cartLoading} // pass loading ke Cart.jsx
+      />
     </Router>
   );
 }

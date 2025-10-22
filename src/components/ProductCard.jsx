@@ -3,7 +3,7 @@ export default function ProductCard({ product, onAddToCart }) {
     <div className="bg-gray-50/20 rounded-lg p-4 shadow hover:shadow-lg transition">
       <div className="flex justify-center">
         <img
-          src={`http://192.168.1.17:8000/storage/${product.image}`}
+          src={`http://localhost:8000/storage/${product.image}`}
           alt={product.name}
           className="h-56 w-56 object-cover rounded-md"
         />

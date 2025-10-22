@@ -4,7 +4,7 @@ import { FaShoppingCart } from "react-icons/fa"
 import Logo from "../../../public/logo.png";
 import Cart from "../../pages/Cart";
 
-export default function Navbar({ user, onLogout }) {
+export default function Navbar({ user, onLogout, onCartClick }) {
   const location = useLocation();
   const onProductPage = location.pathname === "/products";
   const [isScrolled, setIsScrolled] = useState(false);
@@ -88,19 +88,21 @@ export default function Navbar({ user, onLogout }) {
             )}
 
             <div
-              onClick={() => setCartOpen(true)}
-              className="relative !cursor-pointer"
-            >
-              <FaShoppingCart size={22} className="text-white hover:text-gray-200" />
-              <span className="absolute -top-1 -right-1 bg-red-500 text-xs text-white px-1 rounded-full leading-none">
-                3
-              </span>
-            </div>
+  onClick={() => {
+    console.log("🖱 Cart icon clicked!");
+    onCartClick && onCartClick(); // state cartOpen di App yang diubah
+  }}
+  className="relative !cursor-pointer"
+>
+  <FaShoppingCart size={22} className="text-white hover:text-gray-200" />
+</div>
+
+
           </div>
         </div>
       </nav>
 
-      <Cart isOpen={cartOpen} onClose={() => setCartOpen(false)}></Cart>
+      {/* <Cart isOpen={cartOpen} onClose={() => setCartOpen(false)}></Cart> */}
     </>
   );
 }
