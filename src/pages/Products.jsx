@@ -22,7 +22,7 @@ export default function Products({ onAddToCart }) {
   }, []);
 
   return (
-    <div className="flex flex-col gap-5 max-w-5xl mx-auto">
+    <div className="flex flex-col gap-5 max-w-5xl mx-auto my-16">
       <form className="w-full relative">
         <svg
           xmlns="http://www.w3.org/2000/svg"

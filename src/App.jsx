@@ -9,6 +9,10 @@ import Register from "./pages/Register";
 import api from "./api/axios";
 import PrivateRoute from "./components/Routes/PrivateRoute";
 import { Toaster, toast } from "react-hot-toast";
+import OrderSuccess from "./pages/OrderSuccess";
+import Profile from "./pages/Profile";
+import Testimoni from "./pages/Testimoni";
+import ProfileNavbar from "./components/Layout/ProfileNavbar";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -60,28 +64,45 @@ function App() {
 
   // Cek auth
   const checkAuth = useCallback(() => {
-    const savedUser = localStorage.getItem("user");
-    if (savedUser) setUser(JSON.parse(savedUser));
-    else setUser(null);
-    setLoading(false);
-  }, []);
+  const savedUser = localStorage.getItem("user");
+
+  try {
+    if (savedUser && savedUser !== "undefined") {
+      setUser(JSON.parse(savedUser));
+    } else {
+      setUser(null);
+    }
+  } catch (err) {
+    console.error("User data corrupted in localStorage:", err);
+    localStorage.removeItem("user");
+    setUser(null);
+  }
+
+  setLoading(false);
+}, []);
+
 
   const handleLogin = async () => {
     checkAuth();
     fetchCart();
   };
 
-  const handleLogout = async () => {
-    try {
-      await api.post("/customer/logout");
-      localStorage.removeItem("user");
-      setUser(null);
-      setCart([]);
-      toast.success("Logout berhasil!");
-    } catch (err) {
-      console.error("Logout error:", err);
-    }
-  };
+const handleLogout = async () => {
+  try {
+    // hapus token & user dulu
+    localStorage.removeItem("token"); 
+    localStorage.removeItem("user");
+    setUser(null);
+    setCart([]);
+
+    // optional: request backend logout
+    await api.post("/customer/logout");
+  } catch (err) {
+    console.error("Logout error:", err);
+  }
+};
+
+
 
   useEffect(() => { checkAuth(); }, [checkAuth]);
   useEffect(() => { if (user) fetchCart(); }, [user, fetchCart]);
@@ -125,6 +146,39 @@ function App() {
             </PrivateRoute>
           }
         />
+
+         <Route path="/cart" element={<Cart />} />
+        <Route path="/order-success" element={<OrderSuccess />} />
+        <Route
+  path="/profile"
+  element={
+    <PrivateRoute user={user}>
+      <ProfileNavbar
+        user={user}
+        onLogout={handleLogout}
+        onCartClick={handleOpenCart}
+      >
+        <Profile />
+      </ProfileNavbar>
+    </PrivateRoute>
+  }
+/>
+<Route
+  path="/testimoni"
+  element={
+    <PrivateRoute user={user}>
+      <Layout
+        user={user}
+        onLogout={handleLogout}
+        onCartClick={handleOpenCart}
+      >
+        <Testimoni />
+      </Layout>
+    </PrivateRoute>
+  }
+/>
+
+
       </Routes>
 
       <Cart

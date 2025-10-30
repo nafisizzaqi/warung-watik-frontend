@@ -5,9 +5,10 @@ function PrivateRoute({ user, children, loading }) {
   if (loading) {
     return <Spinner />;
   }
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
+  if (user === null) {
+  return <Navigate to="/login" replace />;
+}
+
   return children;
 }
 

@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import ImgLogin from "../assets/img-login.png";
 import EmailIcon from "../assets/gmail.png";
 import LockIcon from "../assets/lock.png";
+import { toast } from "react-hot-toast";
+import PageTransition from "../components/Effect/PageTransition";
 
 export default function Login({ onLogin }) {
   const [email, setEmail] = useState("");
@@ -11,6 +13,8 @@ export default function Login({ onLogin }) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const [transitioning, setTransitioning] = useState(false);
+const [transitionText, setTransitionText] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,16 +27,31 @@ export default function Login({ onLogin }) {
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.customer));
 
-      if (onLogin) onLogin();
+      toast.success("Login Berhasil");
 
-      navigate("/");
+      if (onLogin) onLogin();
+setTransitionText("Selamat datang 😄");
+setTransitioning(true);
+
+// Navigasi saat animasi masih berjalan
+setTimeout(() => {
+  navigate("/");
+}, 1200);
+
+// Matikan animasi sedikit setelah navigasi
+setTimeout(() => {
+  setTransitioning(false);
+}, 2000);
+
     } catch (err) {
+      console.error(err);
+      toast.error("Login Gagal");
       setError("Email atau password salah");
     }
   };
 
   return (
-    <div className="flex flex-col items-center h-screen bg-[#730302]">
+    <div className="flex flex-col items-center min-h-screen bg-[#730302]">
       <img className="w-64 h-64" src={ImgLogin} alt="" />
       <h2 className="text-4xl font-bold text-white mb-8 text-center">Warung Mbak Watik</h2>
       {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
@@ -87,6 +106,8 @@ export default function Login({ onLogin }) {
           </button>
         </div>
       </form>
+      <PageTransition show={transitioning} text={transitionText} />
+
     </div>
   );
 }

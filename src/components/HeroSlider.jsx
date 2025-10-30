@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-export default function HeroSlider() {
+export default function HeroSlider({title}) {
     const images = [
         "/assets/bg-1.jpg",
         "/assets/bg-2.jpg",
@@ -24,8 +24,8 @@ export default function HeroSlider() {
             style={{ backgroundImage: `url(${images[currentIndex]})` }}
         >
             <div className="h-full w-full flex flex-col items-center justify-center bg-black/40">
-                <h1 className="text-white text-3xl font-bold">Welcome to</h1>
-                <h1 className="text-white text-7xl font-bold">Warung Watik</h1>
+                <h1 className="text-5xl font-bold drop-shadow-lg mb-4 text-white">{title}</h1>
+                {/* <h1 className="text-white text-7xl font-bold">Warung Watik</h1> */}
             </div>
         </div>
     );

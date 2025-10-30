@@ -1,7 +1,109 @@
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "../api/axios";
 
 export default function Cart({ isOpen, onClose, cart = [], loading = false }) {
   const isEmpty = useMemo(() => !cart || cart.length === 0, [cart]);
+  const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
+const [shippingAddress, setShippingAddress] = useState("");
+const [paymentMethod, setPaymentMethod] = useState("cash");
+const [loadingCheckout, setLoadingCheckout] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    }else{
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    }
+  }, [isOpen]);
+  useEffect(() => {
+  if (checkoutModalOpen) {
+    document.body.style.overflow = "hidden";
+  } else {
+    document.body.style.overflow = "";
+  }
+}, [checkoutModalOpen]);
+
+
+   const navigate = useNavigate();
+
+  const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const discount = 0;
+  const total = subtotal - discount;
+
+  const handleCheckout = async () => {
+  try {
+    const orderRes = await api.post("/customer/orders", {
+      shipping_address: "Alamat contoh",
+      payment_method: "cash",
+      shipping_cost: 0,
+    });
+
+    const order = orderRes.data.data;
+
+    // Setelah order berhasil dibuat, buat payment-nya
+    await api.post(`/customer/orders/${order.id}/payment`, {
+      transaction_id: `TRX-${Date.now()}`,     // bisa random
+      payment_type: "cash",
+      transaction_status: "settlement",         // artinya sudah dibayar
+      gross_amount: order.grand_total,
+      transaction_time: new Date().toISOString().slice(0, 19).replace("T", " "),
+      fraud_status: "accept",
+    });
+
+    onClose();
+    navigate("/order-success", { state: { order } });
+  } catch (err) {
+    console.error("Checkout gagal:", err);
+    alert("Checkout gagal, coba lagi");
+  }
+};
+
+const openCheckoutModal = () => {
+  if (isEmpty) return alert("Keranjang kosong 🛒");
+  setCheckoutModalOpen(true);
+};
+
+// Ganti handleCheckout jadi khusus modal
+const handleCheckoutModal = async () => {
+  if (!shippingAddress) return alert("Alamat pengiriman harus diisi!");
+  if (!paymentMethod) return alert("Metode pembayaran harus dipilih!");
+  setLoadingCheckout(true);
+
+  try {
+    const orderRes = await api.post("/customer/orders", {
+      shipping_address: shippingAddress,
+      payment_method: paymentMethod,
+      shipping_cost: 0,
+    });
+
+    const order = orderRes.data.data;
+
+    if (paymentMethod === "cash") {
+      await api.post(`/customer/orders/${order.id}/payment`, {
+        transaction_id: `TRX-${Date.now()}`,
+        payment_type: "cash",
+        transaction_status: "settlement",
+        gross_amount: order.grand_total,
+        transaction_time: new Date().toISOString().slice(0, 19).replace("T", " "),
+        fraud_status: "accept",
+      });
+    }
+
+    setCheckoutModalOpen(false);
+    onClose();
+    navigate("/order-success", { state: { order } });
+  } catch (err) {
+    console.error("Checkout gagal:", err);
+    alert("Checkout gagal, coba lagi");
+  } finally {
+    setLoadingCheckout(false);
+  }
+};
 
   return (
     <>
@@ -41,29 +143,140 @@ export default function Cart({ isOpen, onClose, cart = [], loading = false }) {
           ) : (
             <div className="space-y-4">
               {cart.map((item) => (
-                <div className="bg-gray-50/30 p-1.5 rounded-3xl">
-                  <div key={item.id} className="flex justify-between items-center p-3 border rounded-3xl hover:shadow-md bg-gray-50/30 border-none">
+                <div key={item.id} className="bg-gray-50/30 p-1.5 rounded-3xl">
+                  <div className="grid grid-cols-3 items-center p-3 border rounded-3xl hover:shadow-md bg-gray-50/30 border-none">
                     <div className="">
-                      <img src={`http://localhost:8000/storage/${item.product.image}`} alt={item.product.name} className="w-16 h-16 object-cover rounded" />
+                      <img src={`http://localhost:8000/storage/${item.product.image}`} alt={item.product.name} className="w-20 h-20 object-cover rounded" />
                     </div>
-                    <div className="flex flex-col">
-                      <span className="block font-medium text-white text-left">{item.product?.name || "Unnamed product"}</span>
+                    <div className="flex flex-col gap-2">
+                      <span className="block font-semibold text-xl text-white text-left">{item.product?.name || "Unnamed product"}</span>
                       {/* Rp {item.price?.toLocaleString("id-ID") ?? 0} */}
                       <span className="text-[#eeb626] font-semibold">
                         Rp {item.price?.toLocaleString("id-ID") ?? 0}
                       </span>
                       {/* <span className="text-sm text-white">Qty: {item.quantity ?? 1}</span> */}
                     </div>
-                    <span className="text-white font-semibold">
+                    <div className="flex flex-col items-center gap-2">
+  <div className="flex items-center gap-2">
+    <span className="text-white bg-gray-50/30 rounded-full w-10 h-10 flex items-center justify-center">
+      {item.quantity}x
+    </span>
 
-                    </span>
+    <button
+      className="flex items-center justify-center bg-gray-50/30 text-white rounded-full w-10 h-10"
+      onClick={() => increment(item)}
+    >
+      +
+    </button>
+  </div>
+
+  <span className="text-gray-50/50 cursor-pointer text-lg" onClick={() => removeItem(item)}>
+    Hapus
+  </span>
+</div>
+
+
                   </div>
                 </div>
               ))}
             </div>
           )}
+          <div className="relative mt-32 mb-10 rounded-3xl overflow-hidden">
+  {/* Lapisan blur khusus background */}
+  <div className="absolute inset-0 bg-gray-50/30 backdrop-blur-sm"></div>
+
+  {/* Konten tetap tajam */}
+  <div className="relative z-10 p-4 bg-gray-50/30 rounded-3xl bottom-0">
+    <span className="text-2xl text-white">Rangkayan Pembayaran</span>
+
+    <div className="flex flex-col gap-2 mb-3 mt-3">
+      <div className="flex justify-between text-gray-800">
+        <span className="text-white">Subtotal</span>
+        <span className="text-white">
+          Rp {cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toLocaleString("id-ID")}
+        </span>
+      </div>
+
+      <div className="flex justify-between text-gray-800">
+        <span className="text-white">Diskon</span>
+        <span className="text-white">Rp 0</span>
+      </div>
+
+      <div className="flex justify-between font-bold text-lg">
+        <span className="text-white">Total Bayar</span>
+        <span className="text-[#eeb626]">
+          Rp {cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toLocaleString("id-ID")}
+        </span>
+      </div>
+    </div>
+
+    <button
+  className="w-full bg-[#eeb626] text-white py-3 rounded-full font-semibold hover:bg-yellow-500 transition-colors"
+  onClick={openCheckoutModal} // ganti dari handleCheckout
+>
+  Bayar Sekarang
+</button>
+
+<div className="flex justify-end mb-3 mt-3">
+  <label className="flex items-center gap-2 cursor-pointer">
+    <input
+      type="checkbox"
+      className="w-5 h-5 appearance-none border-2 border-white rounded-full checked:bg-[#eeb626] checked:border-[#eeb626] transition-all duration-200"
+      checked={paymentMethod === "cash"}
+      onChange={e => setPaymentMethod(e.target.checked ? "cash" : "")}
+    />
+    <span className="text-white">Tunai saat ambil</span>
+  </label>
+</div>
+
+
+
+  </div>
+</div>
+
         </div>
       </div>
+
+      {/* MODAL CHECKOUT */}
+{checkoutModalOpen && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="absolute inset-0 bg-black/50" onClick={() => setCheckoutModalOpen(false)}></div>
+
+    <div className="relative z-10 bg-white rounded-2xl p-6 w-96">
+      <h2 className="text-xl font-bold mb-4">Checkout</h2>
+
+      <div className="flex flex-col gap-3 mb-4">
+        <label>Alamat Pengiriman:</label>
+        <input
+          type="text"
+          className="border p-2 rounded"
+          value={shippingAddress}
+          onChange={e => setShippingAddress(e.target.value)}
+          placeholder="Masukkan alamat pengiriman"
+        />
+
+        <label>Metode Pembayaran:</label>
+        <select
+          className="border p-2 rounded"
+          value={paymentMethod}
+          onChange={e => setPaymentMethod(e.target.value)}
+        >
+          <option value="cash">Tunai saat ambil</option>
+          <option value="midtrans">Midtrans</option>
+        </select>
+      </div>
+
+      <button
+        onClick={handleCheckoutModal}
+        className="w-full py-3 bg-[#eeb626] text-white font-semibold rounded-full"
+        disabled={loadingCheckout}
+      >
+        {loadingCheckout ? "Memproses..." : "Bayar Sekarang"}
+      </button>
+    </div>
+  </div>
+)}
+
     </>
   );
 }

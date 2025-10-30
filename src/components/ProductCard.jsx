@@ -19,7 +19,7 @@ export default function ProductCard({ product, onAddToCart }) {
           onAddToCart(product); // tetap panggil fungsi addToCart jika ada
         }}
       >
-        Add to Cart
+        + Tambah
       </button>
     </div>
   );

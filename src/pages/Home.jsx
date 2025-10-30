@@ -1,13 +1,13 @@
-import { useState } from "react";
 import Layout from "../components/Layout/Layout";
-import Cart from "./Cart";
+import Testimonials from "../components/Testimonials";
 
 export default function Home({ user }) {
   return (
-    <div>
-      <h1 className="text-white text-2xl">Welcome, {user.name}</h1>
-      {/* Konten halaman lainnya */}
-    </div>
+    // <Layout>
+      <div className="text-white text-center mt-10">
+        <h1 className="text-3xl mb-6">Welcome, {user.name}</h1>
+        <Testimonials />
+      </div>
+    // </Layout>
   );
 }
-
