@@ -1,6 +1,7 @@
 import { useMemo, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import toast from 'react-hot-toast';
 
 export default function Cart({ isOpen, onClose, cart = [], loading = false }) {
   const isEmpty = useMemo(() => !cart || cart.length === 0, [cart]);
@@ -99,7 +100,7 @@ const handleCheckoutModal = async () => {
     navigate("/order-success", { state: { order } });
   } catch (err) {
     console.error("Checkout gagal:", err);
-    alert("Checkout gagal, coba lagi");
+    toast.error("Checkout gagal, coba lagi");
   } finally {
     setLoadingCheckout(false);
   }

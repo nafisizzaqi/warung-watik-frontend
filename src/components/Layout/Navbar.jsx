@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { FaShoppingCart, FaUserCircle, FaSignOutAlt } from "react-icons/fa";
 import PageTransition from "../Effect/PageTransition";
@@ -11,6 +11,17 @@ export default function Navbar({ user, onLogout, onCartClick }) {
   const [profileOpen, setProfileOpen] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
 const [transitionText, setTransitionText] = useState("");
+const navigate = useNavigate();
+
+const handleNavClick = (path, text) => {
+  setTransitionText(text);
+  setTransitioning(true);
+
+  setTimeout(() => {
+    navigate(path);
+    setTransitioning(false);
+  }, 1500); // durasi animasi PageTransition (sesuaikan)
+};
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 0);
@@ -36,41 +47,33 @@ const [transitionText, setTransitionText] = useState("");
 
           <div className={`flex items-center justify-end space-x-6 text-right ${isScrolled ? "mr-44" : "mr-16"}`}>
               <div className="flex gap-5">
-                <Link
-                  to="/"
-                  onClick={() => {
-                    setTransitionText("Welcome to Home");
-                    setTransitioning(true);
-                    setTimeout(() => setTransitioning(false), 2000);
-                  }}
-                  className="relative text-white hover:text-white after:content-[''] after:absolute after:w-0 after:h-[2px] after:bg-white after:right-0 after:bottom-0 after:transition-all after:duration-300 hover:after:w-full hover:after:left-0"
-                >
-                  Home
-                </Link>
+                <span
+  onClick={() => handleNavClick("/", "Welcome to Home")}
+  className="relative cursor-pointer text-white hover:text-white 
+             after:content-[''] after:absolute after:w-0 after:h-[2px] 
+             after:bg-white after:right-0 after:bottom-0 after:transition-all 
+             after:duration-300 hover:after:w-full hover:after:left-0"
+>
+  Home
+</span>
 
-                <Link
-                  to="/products"
-                  onClick={() => {
-                    setTransitionText("Halaman Menu");
-                    setTransitioning(true);
-                    setTimeout(() => setTransitioning(false), 2000);
-                  }}
-                  className="relative text-white hover:text-white after:content-[''] after:absolute after:w-0 after:h-[2px] after:bg-white after:right-0 after:bottom-0 after:transition-all after:duration-300 hover:after:w-full hover:after:left-0"
-                >
-                  Menu
-                </Link>
+                <span
+  onClick={() => handleNavClick("/products", "Halaman Menu")}
+  className="relative cursor-pointer text-white hover:text-white 
+             after:content-[''] after:absolute after:w-0 after:h-[2px] 
+             after:bg-white after:right-0 after:bottom-0 after:transition-all 
+             after:duration-300 hover:after:w-full hover:after:left-0"
+>
+  Menu
+</span>
 
-                <Link
-                  to="/testimoni"
-                  onClick={() => {
-                    setTransitionText("Halaman Testimoni");
-                    setTransitioning(true);
-                    setTimeout(() => setTransitioning(false), 2000);
-                  }}
-                  className="relative text-white hover:text-white after:content-[''] after:absolute after:w-0 after:h-[2px] after:bg-white after:right-0 after:bottom-0 after:transition-all after:duration-300 hover:after:w-full hover:after:left-0"
+                <span
+                  
+                  onClick={() => handleNavClick("/testimoni", "Halaman Testimoni")}
+                  className="relative cursor-pointer text-white hover:text-white after:content-[''] after:absolute after:w-0 after:h-[2px] after:bg-white after:right-0 after:bottom-0 after:transition-all after:duration-300 hover:after:w-full hover:after:left-0"
                 >
                   Testimoni
-                </Link>
+                </span>
               </div>
 
             {/* Keranjang */}
@@ -112,13 +115,15 @@ const [transitionText, setTransitionText] = useState("");
           {profileOpen && (
               <div className="absolute right-0 mt-2 w-40 rounded-lg overflow-hidden bg-[#eeb626] rounded-bl-2xl shadow-lg z-50 transition-all duration-300">
               <div className="flex flex-col p-4 space-y-3">
-<Link
-                to="/profile"
-                onClick={() => setProfileOpen(false)}
-                className="flex items-center gap-2 text-[#eeb626] text-lg bg-white hover:text-white font-medium border border-white hover:bg-[#eeb626] px-3 py-2 rounded-md transition duration-200"
+<span
+                onClick={() => {
+                  setProfileOpen(false);
+                  handleNavClick("/profile", "My Profile");
+                }}
+                className="flex cursor-pointer items-center gap-2 text-[#eeb626] text-lg bg-white hover:text-white font-medium border border-white hover:bg-[#eeb626] px-3 py-2 rounded-md transition duration-200"
               >
                 <FaUserCircle />Profile
-              </Link>
+              </span>
             <button
   onClick={() => {
     setProfileOpen(false);
@@ -128,7 +133,7 @@ const [transitionText, setTransitionText] = useState("");
     setTimeout(() => {
       onLogout && onLogout();       // hapus token + setUser(null)
       setTransitioning(false);      // matikan animasi
-    }, 1000); // durasi sesuai animasi
+    }, 1500); // durasi sesuai animasi
   }}
   className="flex items-center gap-2 text-[#eeb626] appearance-none focus:outline-none hover:text-white text-lg hover:bg-[#eeb626] px-3 py-2 border border-white rounded-md transition-all duration-300"
 >

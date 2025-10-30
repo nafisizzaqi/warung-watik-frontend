@@ -38,7 +38,7 @@ export default function Register({ onRegister }) {
   };
 
   return (
-    <div className="flex flex-col items-center h-screen bg-[#730302]">
+    <div className="flex flex-col items-center min-h-screen bg-[#730302]">
       <img className="w-64 h-64" src={ImgLogin} alt="" />
       <h2 className="text-4xl font-bold text-white mb-8 text-center">Warung Mbak Watik</h2>
       {error && <p className="text-red-500 text-sm mb-2">{error}</p>}

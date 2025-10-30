@@ -1,5 +1,6 @@
 import { useState } from "react";
 import api from "../api/axios";
+import toast from 'react-hot-toast';
 
 export default function TestimonialForm({ onSubmitted }) {
   const [formData, setFormData] = useState({
@@ -18,24 +19,31 @@ export default function TestimonialForm({ onSubmitted }) {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!formData.rating || !formData.message) return alert("Isi rating dan pesan ya!");
+  e.preventDefault();
 
-    try {
-      setSubmitting(true);
-      await api.post("/customer/testimonials", formData, {
-  headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-});
-      onSubmitted(); // reload data di parent
-      setFormData({ name: "", rating: 0, message: "" });
-      alert("Terima kasih atas ulasannya 💖");
-    } catch (error) {
-      console.error(error);
-      alert("Gagal mengirim testimoni 😢");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  if (formData.rating === null || formData.rating === undefined || !formData.message.trim()) {
+    return toast.error("Isi rating dan pesan ya!");
+  }
+
+  try {
+    setSubmitting(true);
+
+    await api.post("/customer/testimonials", formData, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    });
+
+    onSubmitted(); // reload data di parent
+    setFormData({ name: "", rating: 0, message: "" });
+
+    toast.success("Terima kasih atas ulasannya 💖");
+  } catch (error) {
+    console.error(error);
+    const msg = error.response?.data?.message || "Gagal mengirim testimoni 😢";
+    toast.error(msg);
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   return (
     <form onSubmit={handleSubmit} className="bg-[#eeb626] text-white p-6 rounded-xl mt-8">

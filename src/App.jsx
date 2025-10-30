@@ -111,7 +111,7 @@ const handleLogout = async () => {
 
   return (
     <Router>
-      <Toaster position="top-right" />
+      <Toaster position="bottom-right" />
 
       <Routes>
         <Route path="/login" element={<Login onLogin={handleLogin} />} />

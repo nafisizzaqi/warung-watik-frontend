@@ -8,26 +8,27 @@ export default function Profile() {
   const [selectedOrder, setSelectedOrder] = useState(null); // <- untuk modal
 
   // Fetch data profil dan pesanan
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [profileRes, ordersRes] = await Promise.all([
-          api.get("/customer/profile"),
-          api.get("/customer/orders"),
-        ]);
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const [profileRes, ordersRes] = await Promise.all([
+        api.get("/customer/profile"),
+        api.get("/customer/orders"), // sudah include payment & shipment
+      ]);
 
-        setUser(profileRes.data.data || null);
-        setOrders(ordersRes.data.data || []);
-        console.log(ordersRes);
-      } catch (err) {
-        console.error("Gagal mengambil data profil atau pesanan:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+      setUser(profileRes.data.data || null);
+      setOrders(ordersRes.data.data || []);
+      console.log("Orders lengkap:", ordersRes.data.data);
+    } catch (err) {
+      console.error("Gagal mengambil data profil atau pesanan:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchData();
-  }, []);
+  fetchData();
+}, []);
+
 
   // Filter berdasarkan status
   const incomingOrders = orders.filter((o) => o.status === "masuk");
@@ -142,10 +143,10 @@ export default function Profile() {
           ></div>
 
           <div className="fixed inset-0 z-50 flex items-center justify-center">
-            <div className="bg-white text-black w-11/12 md:w-2/3 lg:w-1/2 rounded-2xl shadow-xl p-6 relative">
+            <div className="bg-[#eeb626] text-black w-11/12 md:w-2/3 lg:w-1/2 rounded-2xl shadow-xl p-6 relative">
               <button
                 onClick={() => setSelectedOrder(null)}
-                className="absolute top-3 right-3 text-gray-500 hover:text-black"
+                className="absolute top-3 right-3 text-gray-500 bg-transparent border-none hover:border-none hover:text-black"
               >
                 ✕
               </button>
@@ -154,10 +155,24 @@ export default function Profile() {
                 Detail Pesanan #{selectedOrder.queue_number}
               </h2>
 
+             <div className="space-y-2">
               <p>
-                <span className="font-semibold">Status:</span>{" "}
-                {selectedOrder.status}
-              </p>
+  <span className="font-semibold">Status:</span>{" "}
+  <span
+    className={`px-2 py-0.5 rounded-full text-white font-semibold text-sm ${
+      selectedOrder.status === "siap_ambil"
+        ? "bg-green-500"
+        : selectedOrder.status === "diproses"
+        ? "bg-yellow-500"
+        : selectedOrder.status === "masuk"
+        ? "bg-gray-500"
+        : "bg-blue-500"
+    }`}
+  >
+    {selectedOrder.status.replace("_", " ").toUpperCase()}
+  </span>
+</p>
+
               <p>
                 <span className="font-semibold">Tanggal:</span>{" "}
                 {new Date(selectedOrder.created_at).toLocaleString("id-ID")}
@@ -203,6 +218,7 @@ export default function Profile() {
                   Tutup
                 </button>
               </div>
+             </div>
             </div>
           </div>
         </>
