@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
 import Home from "./pages/Home";
 import Products from "./pages/Products";
@@ -21,7 +21,9 @@ function App() {
   const [cartOpen, setCartOpen] = useState(false);
   const [cartLoading, setCartLoading] = useState(false); // untuk skeleton loader
 
-  // Fetch cart
+  // ===========================
+  // FETCH CART
+  // ===========================
   const fetchCart = useCallback(async () => {
     try {
       setCartLoading(true);
@@ -31,22 +33,25 @@ function App() {
       } else {
         setCart([]);
       }
-    } catch (err) {
+    } catch {
       setCart([]);
     } finally {
       setCartLoading(false);
     }
   }, []);
 
-  // Buka drawer langsung, fetch di background
+  // ===========================
+  // CART DRAWER
+  // ===========================
   const handleOpenCart = () => {
     setCartOpen(true);   // drawer langsung muncul
     fetchCart();         // fetch cart di background
   };
-
   const handleCloseCart = () => setCartOpen(false);
 
-  // Add to cart
+  // ===========================
+  // ADD TO CART
+  // ===========================
   const addToCart = async (product) => {
     try {
       await api.post("/customer/cart/items", {
@@ -62,70 +67,93 @@ function App() {
     }
   };
 
-  // Cek auth
+  // ===========================
+  // CEK AUTH
+  // ===========================
   const checkAuth = useCallback(() => {
-  const savedUser = localStorage.getItem("user");
+    const savedUser = localStorage.getItem("user");
 
-  try {
-    if (savedUser && savedUser !== "undefined") {
-      setUser(JSON.parse(savedUser));
-    } else {
+    try {
+      if (savedUser && savedUser !== "undefined") {
+        setUser(JSON.parse(savedUser));
+      } else {
+        setUser(null);
+      }
+    } catch (err) {
+      console.error("User data corrupted in localStorage:", err);
+      localStorage.removeItem("user");
       setUser(null);
     }
-  } catch (err) {
-    console.error("User data corrupted in localStorage:", err);
-    localStorage.removeItem("user");
-    setUser(null);
-  }
 
-  setLoading(false);
-}, []);
+    setLoading(false);
+  }, []);
 
-
+  // ===========================
+  // LOGIN & LOGOUT HANDLER
+  // ===========================
   const handleLogin = async () => {
     checkAuth();
     fetchCart();
   };
 
-const handleLogout = async () => {
-  try {
-    // hapus token & user dulu
-    localStorage.removeItem("token"); 
-    localStorage.removeItem("user");
-    setUser(null);
-    setCart([]);
+  const handleLogout = async () => {
+    try {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      setUser(null);
+      setCart([]);
 
-    // optional: request backend logout
-    await api.post("/customer/logout");
-  } catch (err) {
-    console.error("Logout error:", err);
-  }
-};
+      // optional: logout ke backend
+      await api.post("/customer/logout");
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+  };
 
+  // ===========================
+  // LIFECYCLE
+  // ===========================
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
+  useEffect(() => {
+    if (user) fetchCart();
+  }, [user, fetchCart]);
 
-  useEffect(() => { checkAuth(); }, [checkAuth]);
-  useEffect(() => { if (user) fetchCart(); }, [user, fetchCart]);
-
+  // ===========================
+  // LOADING STATE
+  // ===========================
   if (loading) return <div className="text-center p-10">Loading...</div>;
 
+  // ===========================
+  // ROUTES
+  // ===========================
   return (
     <Router>
       <Toaster position="bottom-right" />
 
       <Routes>
+        {/* Redirect otomatis ke /login jika belum login */}
+        <Route
+          path="/"
+          element={
+            user ? (
+              <Navigate to="/home" replace />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+
         <Route path="/login" element={<Login onLogin={handleLogin} />} />
         <Route path="/register" element={<Register />} />
 
         <Route
-          path="/"
+          path="/home"
           element={
             <PrivateRoute user={user}>
-              <Layout
-                user={user}
-                onLogout={handleLogout}
-                onCartClick={handleOpenCart}
-              >
+              <Layout user={user} onLogout={handleLogout} onCartClick={handleOpenCart}>
                 <Home user={user} />
               </Layout>
             </PrivateRoute>
@@ -136,49 +164,37 @@ const handleLogout = async () => {
           path="/products"
           element={
             <PrivateRoute user={user}>
-              <Layout
-                user={user}
-                onLogout={handleLogout}
-                onCartClick={handleOpenCart}
-              >
+              <Layout user={user} onLogout={handleLogout} onCartClick={handleOpenCart}>
                 <Products onAddToCart={addToCart} />
               </Layout>
             </PrivateRoute>
           }
         />
 
-         <Route path="/cart" element={<Cart />} />
+        <Route path="/cart" element={<Cart />} />
         <Route path="/order-success" element={<OrderSuccess />} />
+
         <Route
-  path="/profile"
-  element={
-    <PrivateRoute user={user}>
-      <ProfileNavbar
-        user={user}
-        onLogout={handleLogout}
-        onCartClick={handleOpenCart}
-      >
-        <Profile />
-      </ProfileNavbar>
-    </PrivateRoute>
-  }
-/>
-<Route
-  path="/testimoni"
-  element={
-    <PrivateRoute user={user}>
-      <Layout
-        user={user}
-        onLogout={handleLogout}
-        onCartClick={handleOpenCart}
-      >
-        <Testimoni />
-      </Layout>
-    </PrivateRoute>
-  }
-/>
+          path="/profile"
+          element={
+            <PrivateRoute user={user}>
+              <ProfileNavbar user={user} onLogout={handleLogout} onCartClick={handleOpenCart}>
+                <Profile />
+              </ProfileNavbar>
+            </PrivateRoute>
+          }
+        />
 
-
+        <Route
+          path="/testimoni"
+          element={
+            <PrivateRoute user={user}>
+              <Layout user={user} onLogout={handleLogout} onCartClick={handleOpenCart}>
+                <Testimoni />
+              </Layout>
+            </PrivateRoute>
+          }
+        />
       </Routes>
 
       <Cart
