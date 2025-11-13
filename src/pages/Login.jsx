@@ -14,7 +14,7 @@ export default function Login({ onLogin }) {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const [transitioning, setTransitioning] = useState(false);
-const [transitionText, setTransitionText] = useState("");
+  const [transitionText, setTransitionText] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,18 +30,18 @@ const [transitionText, setTransitionText] = useState("");
       toast.success("Login Berhasil");
 
       if (onLogin) onLogin();
-setTransitionText("Selamat datang 😄");
-setTransitioning(true);
+      setTransitionText("Selamat datang 😄");
+      setTransitioning(true);
 
-// Navigasi saat animasi masih berjalan
-setTimeout(() => {
-  navigate("/");
-}, 1200);
+      // Navigasi saat animasi masih berjalan
+      setTimeout(() => {
+        navigate("/");
+      }, 1200);
 
-// Matikan animasi sedikit setelah navigasi
-setTimeout(() => {
-  setTransitioning(false);
-}, 2000);
+      // Matikan animasi sedikit setelah navigasi
+      setTimeout(() => {
+        setTransitioning(false);
+      }, 2000);
 
     } catch (err) {
       console.error(err);
@@ -83,7 +83,7 @@ setTimeout(() => {
           <input
             type={showPassword ? "text" : "password"}
             placeholder="Password"
-            className="w-full pl-12 p-2 border rounded-full pr-10 bg-[#730302] placeholder:text-white text-white" 
+            className="w-full pl-12 p-2 border rounded-full pr-10 bg-[#730302] placeholder:text-white text-white"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required

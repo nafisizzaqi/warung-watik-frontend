@@ -13,6 +13,7 @@ import OrderSuccess from "./pages/OrderSuccess";
 import Profile from "./pages/Profile";
 import Testimoni from "./pages/Testimoni";
 import ProfileNavbar from "./components/Layout/ProfileNavbar";
+import OrderDetail from "./pages/OrderDetail";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -192,6 +193,14 @@ function App() {
               <Layout user={user} onLogout={handleLogout} onCartClick={handleOpenCart}>
                 <Testimoni />
               </Layout>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/order-detail"
+          element={
+            <PrivateRoute user={user}>
+              <OrderDetail user={user} />
             </PrivateRoute>
           }
         />

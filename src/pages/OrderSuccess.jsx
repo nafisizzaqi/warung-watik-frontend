@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import api from "../api/axios";
 
 export default function OrderSuccess() {
-  
+
   const navigate = useNavigate();
   const location = useLocation();
   const [order, setOrder] = useState(location.state?.order);
@@ -55,40 +55,38 @@ export default function OrderSuccess() {
         {/* Isi konten */}
         <div className="p-6">
           <div className="bg-gray-50/30 rounded-full w-56 h-56 flex flex-col items-center justify-center text-center mx-auto">
-          <p className="text-lg mb-3 mt-10">Nomor antrean kamu:</p>
-          <p className="text-5xl font-extrabold text-[#eeb626] mb-8">
-            #{order.queue_number}
-          </p>
+            <p className="text-lg mb-3 mt-10">Nomor antrean kamu:</p>
+            <p className="text-5xl font-extrabold text-[#eeb626] mb-8">
+              #{order.queue_number}
+            </p>
           </div>
 
           <div className="text-left mb-6 space-y-2 p-4 bg-gray-50/30 rounded-3xl bottom-0 mt-10">
             <span className="text-2xl text-white">Rangkayan Pembayaran</span>
             <div className="flex justify-between">
-  <span>Subtotal:</span>
-  <span>Rp {(order?.total_amount ?? 0).toLocaleString("id-ID")}</span>
-</div>
+              <span>Subtotal:</span>
+              <span>Rp {(order?.total_amount ?? 0).toLocaleString("id-ID")}</span>
+            </div>
 
-<div className="flex justify-between">
-  <span>Ongkir:</span>
-  <span>Rp {(order?.shipping_cost ?? 0).toLocaleString("id-ID")}</span>
-</div>
+            <div className="flex justify-between">
+              <span>Ongkir:</span>
+              <span>Rp {(order?.shipping_cost ?? 0).toLocaleString("id-ID")}</span>
+            </div>
 
-<div className="flex justify-between font-bold text-lg">
-  <span>Total:</span>
-  <span className="text-[#eeb626]">
-    Rp {(order?.grand_total ?? 0).toLocaleString("id-ID")}
-  </span>
-</div>
+            <div className="flex justify-between font-bold text-lg">
+              <span>Total:</span>
+              <span className="text-[#eeb626]">
+                Rp {(order?.grand_total ?? 0).toLocaleString("id-ID")}
+              </span>
+            </div>
 
             <button
-            onClick={() => navigate("/order-detail", { state: { order } })}
-            className="bg-[#eeb626] text-white py-3 w-full rounded-full font-semibold hover:bg-yellow-500 transition-colors"
-          >
-            Lihat Status Pesanan
-          </button>
+              onClick={() => navigate("/order-detail", { state: { order } })}
+              className="bg-[#eeb626] text-white py-3 w-full rounded-full font-semibold hover:bg-yellow-500 transition-colors"
+            >
+              Lihat Status Pesanan
+            </button>
           </div>
-
-          
         </div>
       </div>
     </div>
