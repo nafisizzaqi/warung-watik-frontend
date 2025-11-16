@@ -197,7 +197,7 @@ function App() {
           }
         />
         <Route
-          path="/order-detail"
+          path="/order-detail/:id"
           element={
             <PrivateRoute user={user}>
               <OrderDetail user={user} />

@@ -49,7 +49,7 @@ export default function Navbar({ user, onLogout, onCartClick }) {
             <div className="flex gap-5">
               <span
                 onClick={() => handleNavClick("/", "Welcome to Home")}
-                className="relative cursor-pointer text-white hover:text-white 
+                className="relative !cursor-pointer text-white hover:text-white 
              after:content-[''] after:absolute after:w-0 after:h-[2px] 
              after:bg-white after:right-0 after:bottom-0 after:transition-all 
              after:duration-300 hover:after:w-full hover:after:left-0"
@@ -59,7 +59,7 @@ export default function Navbar({ user, onLogout, onCartClick }) {
 
               <span
                 onClick={() => handleNavClick("/products", "Halaman Menu")}
-                className="relative cursor-pointer text-white hover:text-white 
+                className="relative !cursor-pointer text-white hover:text-white 
              after:content-[''] after:absolute after:w-0 after:h-[2px] 
              after:bg-white after:right-0 after:bottom-0 after:transition-all 
              after:duration-300 hover:after:w-full hover:after:left-0"
@@ -70,7 +70,7 @@ export default function Navbar({ user, onLogout, onCartClick }) {
               <span
 
                 onClick={() => handleNavClick("/testimoni", "Halaman Testimoni")}
-                className="relative cursor-pointer text-white hover:text-white after:content-[''] after:absolute after:w-0 after:h-[2px] after:bg-white after:right-0 after:bottom-0 after:transition-all after:duration-300 hover:after:w-full hover:after:left-0"
+                className="relative !cursor-pointer text-white hover:text-white after:content-[''] after:absolute after:w-0 after:h-[2px] after:bg-white after:right-0 after:bottom-0 after:transition-all after:duration-300 hover:after:w-full hover:after:left-0"
               >
                 Testimoni
               </span>
@@ -119,7 +119,7 @@ export default function Navbar({ user, onLogout, onCartClick }) {
                     setProfileOpen(false);
                     handleNavClick("/profile", "My Profile");
                   }}
-                  className="flex cursor-pointer items-center gap-2 text-[#eeb626] text-lg bg-white hover:text-white font-medium border border-white hover:bg-[#eeb626] px-3 py-2 rounded-md transition duration-200"
+                  className="flex !cursor-pointer items-center gap-2 text-[#eeb626] text-lg bg-white hover:text-white font-medium border border-white hover:bg-[#eeb626] px-3 py-2 rounded-md transition duration-200"
                 >
                   <FaUserCircle />Profile
                 </span>

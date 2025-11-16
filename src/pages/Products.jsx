@@ -49,7 +49,7 @@ export default function Products({ onAddToCart }) {
       <div className="grid grid-cols-4 gap-6 bg-[#730302]">
         {loading ? (
           Array(4).fill(0).map((_, i) => (
-            <div key={i} className="border rounded-lg p-4 shadow animate-pulse">
+            <div key={i} className="border rounded-lg p-9 shadow animate-pulse">
               <div className="h-40 w-full bg-gray-300 rounded-md mb-2"></div>
               <div className="h-6 w-3/4 bg-gray-300 rounded mb-1"></div>
               <div className="h-4 w-1/2 bg-gray-300 rounded"></div>

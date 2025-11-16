@@ -37,33 +37,26 @@ export default function Cart({ isOpen, onClose, cart = [], loading = false }) {
   };
 
   const handleCheckoutModal = async () => {
-    if (!shippingAddress) return alert("Alamat pengiriman harus diisi!");
-    if (!paymentMethod) return alert("Metode pembayaran harus dipilih!");
     setLoadingCheckout(true);
 
     try {
       const orderRes = await api.post("/customer/orders", {
-        shipping_address: shippingAddress,
-        payment_method: paymentMethod,
+        shipping_address: null,
+        payment_method: null,
         shipping_cost: 0,
       });
 
       const order = orderRes.data.data;
 
-      if (paymentMethod === "cash") {
-        await api.post(`/customer/orders/${order.id}/payment`, {
-          transaction_id: `TRX-${Date.now()}`,
-          payment_type: "cash",
-          transaction_status: "settlement",
-          gross_amount: order.grand_total,
-          transaction_time: new Date().toISOString().slice(0, 19).replace("T", " "),
-          fraud_status: "accept",
-        });
-      }
-
       setCheckoutModalOpen(false);
       onClose();
-      navigate("/order-success", { state: { order } });
+
+      navigate(`/order-detail/${order.id}`, {
+        state: {
+          fromCart: true,
+          paymentMethod: paymentMethod
+        }
+      });
     } catch (err) {
       console.error("Checkout gagal:", err);
       toast.error("Checkout gagal, coba lagi");
@@ -160,10 +153,11 @@ export default function Cart({ isOpen, onClose, cart = [], loading = false }) {
                 </div>
               </div>
               <button
-                className="w-full bg-[#eeb626] text-white py-3 rounded-full font-semibold hover:bg-yellow-500 transition-colors"
-                onClick={openCheckoutModal}
+                onClick={handleCheckoutModal}
+                className="w-full py-3 bg-[#eeb626] text-white font-semibold rounded-full"
+                disabled={loadingCheckout}
               >
-                Bayar Sekarang
+                {loadingCheckout ? "Memproses..." : "Bayar Sekarang"}
               </button>
               <div className="flex justify-end mb-3 mt-3">
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -180,42 +174,6 @@ export default function Cart({ isOpen, onClose, cart = [], loading = false }) {
           </div>
         </div>
       </div>
-
-      {/* MODAL CHECKOUT */}
-      {checkoutModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setCheckoutModalOpen(false)}></div>
-          <div className="relative z-10 bg-white rounded-2xl p-6 w-96">
-            <h2 className="text-xl font-bold mb-4">Checkout</h2>
-            <div className="flex flex-col gap-3 mb-4">
-              <label>Alamat Pengiriman:</label>
-              <input
-                type="text"
-                className="border p-2 rounded"
-                value={shippingAddress}
-                onChange={e => setShippingAddress(e.target.value)}
-                placeholder="Masukkan alamat pengiriman"
-              />
-              <label>Metode Pembayaran:</label>
-              <select
-                className="border p-2 rounded"
-                value={paymentMethod}
-                onChange={e => setPaymentMethod(e.target.value)}
-              >
-                <option value="cash">Tunai saat ambil</option>
-                <option value="midtrans">Midtrans</option>
-              </select>
-            </div>
-            <button
-              onClick={handleCheckoutModal}
-              className="w-full py-3 bg-[#eeb626] text-white font-semibold rounded-full"
-              disabled={loadingCheckout}
-            >
-              {loadingCheckout ? "Memproses..." : "Bayar Sekarang"}
-            </button>
-          </div>
-        </div>
-      )}
     </>
   );
 }

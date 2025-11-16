@@ -70,7 +70,7 @@ export default function OrderSuccess() {
 
             <div className="flex justify-between">
               <span>Ongkir:</span>
-              <span>Rp {(order?.shipping_cost ?? 0).toLocaleString("id-ID")}</span>
+              <span>Rp {(order.shipping_cost || 0).toLocaleString("id-ID")}</span>
             </div>
 
             <div className="flex justify-between font-bold text-lg">
@@ -81,7 +81,7 @@ export default function OrderSuccess() {
             </div>
 
             <button
-              onClick={() => navigate("/order-detail", { state: { order } })}
+              onClick={() => navigate("/profile", { state: { order } })}
               className="bg-[#eeb626] text-white py-3 w-full rounded-full font-semibold hover:bg-yellow-500 transition-colors"
             >
               Lihat Status Pesanan
