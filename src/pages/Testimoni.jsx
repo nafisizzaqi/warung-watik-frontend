@@ -78,168 +78,163 @@ export default function Testimonial() {
   return (
     <div className="w-full max-w-6xl mx-auto px-4 mt-10 mb-20">
       {/* Bagian Statistik Rating */}
-      
-<div className="mb-10">
-      {/* Header logo & info */}
-      <div className="bg-gray-50/30 rounded-full max-w-md mx-auto px-6 py-1 flex items-center gap-2">
-        <img className="w-20 h-20" src="/logo.png" alt="Logo" />
 
-        <div className="flex flex-col">
-          <h2 className="text-xl font-bold text-white mb-1">
-            Warung Mbak Watik
-          </h2>
+      <div className="mb-10">
+        {/* Header logo & info */}
+        <div className="bg-gray-50/30 rounded-full max-w-md mx-auto px-6 py-1 flex items-center gap-2">
+          <img className="w-20 h-20" src="/logo.png" alt="Logo" />
 
-          <div className="flex items-center gap-2">
-            <div className="flex gap-1">
-              {[...Array(5)].map((_, i) => (
-                <span
-                  key={i}
-                  className={`text-xl ${
-                    i < Math.round(averageRating)
-                      ? "text-yellow-400"
-                      : "text-gray-500"
-                  }`}
-                >
-                  ★
-                </span>
-              ))}
+          <div className="flex flex-col">
+            <h2 className="text-xl font-bold text-white mb-1">
+              Warung Mbak Watik
+            </h2>
+
+            <div className="flex items-center gap-2">
+              <div className="flex gap-1">
+                {[...Array(5)].map((_, i) => (
+                  <span
+                    key={i}
+                    className={`text-xl ${i < Math.round(averageRating)
+                        ? "text-yellow-400"
+                        : "text-gray-500"
+                      }`}
+                  >
+                    ★
+                  </span>
+                ))}
+              </div>
+              <p className="text-gray-300 text-xs">
+                (<span className="font-semibold">{totalReviews}</span> reviews)
+              </p>
             </div>
-            <p className="text-gray-300 text-xs">
-              (<span className="font-semibold">{totalReviews}</span> reviews)
+          </div>
+        </div>
+
+        {/* Card untuk rating dan tombol */}
+        <div className="bg-gray-50/30 max-w-sm mx-auto rounded-md mt-3 p-5">
+          <p className="text-gray-200 mb-3">
+            Pengalaman Keseluruhan
+          </p>
+
+          {/* Tambahan rata-rata rating */}
+          <div className="flex justify-start items-center mb-3">
+            <p className="text-gray-300 text-6xl ml-2">
+              {averageRating.toFixed(1)}
             </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Card untuk rating dan tombol */}
-      <div className="bg-gray-50/30 max-w-sm mx-auto rounded-md mt-3 p-5">
-  <p className="text-gray-200 mb-3">
-    Pengalaman Keseluruhan
-  </p>
-
-  {/* Tambahan rata-rata rating */}
-  <div className="flex justify-start items-center mb-3">
-    <p className="text-gray-300 text-6xl ml-2">
-      {averageRating.toFixed(1)}
-    </p>
-    <div className="flex items-center ml-2">
-    <span
-      className={`text-4xl ${
-        averageRating >= 1 ? "text-yellow-400" : "text-gray-500"
-      }`}
-    >
-      ★
-    </span>
-  </div>
-    <p className="text-gray-200">({totalReviews} reviews)</p>
-  </div>
-
-  <button
-    onClick={() => setShowModal(true)}
-    className="bg-[#eeb626] hover:bg-[#d6a620] text-[#730302] font-semibold px-5 py-2 rounded-xl transition-all"
-  >
-    Nilai Pesanan Anda
-  </button>
-</div>
-
-
-      {/* Modal Penilaian */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-[#2b0000] rounded-2xl p-6 max-w-sm w-full text-center shadow-lg">
-            <h3 className="text-xl text-white font-bold mb-4">
-              Beri Rating Pesanan
-            </h3>
-
-            <div className="flex justify-center gap-2 mb-4">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <span
-                  key={star}
-                  className={`text-3xl cursor-pointer transition-all ${
-                    (hovered || userRating) >= star
-                      ? "text-yellow-400 scale-110"
-                      : "text-gray-600"
+            <div className="flex items-center ml-2">
+              <span
+                className={`text-4xl ${averageRating >= 1 ? "text-yellow-400" : "text-gray-500"
                   }`}
-                  onMouseEnter={() => setHovered(star)}
-                  onMouseLeave={() => setHovered(0)}
-                  onClick={() => setUserRating(star)}
-                >
-                  ★
-                </span>
-              ))}
+              >
+                ★
+              </span>
             </div>
-
-            <button
-              onClick={handleSubmitRating}
-              disabled={userRating === 0}
-              className={`mt-2 px-4 py-2 rounded-xl font-semibold ${
-                userRating === 0
-                  ? "bg-gray-500 cursor-not-allowed text-gray-200"
-                  : "bg-[#eeb626] hover:bg-[#d6a620] text-[#730302]"
-              }`}
-            >
-              Kirim Rating
-            </button>
-
-            <button
-              onClick={() => setShowModal(false)}
-              className="block mx-auto mt-3 text-sm text-black hover:bg-gray-300"
-            >
-              Batal
-            </button>
+            <p className="text-gray-200">({totalReviews} reviews)</p>
           </div>
+
+          <button
+            onClick={() => setShowModal(true)}
+            className="bg-[#eeb626] hover:bg-[#d6a620] text-[#730302] font-semibold px-5 py-2 rounded-xl transition-all"
+          >
+            Nilai Pesanan Anda
+          </button>
         </div>
-      )}
-    </div>
+
+
+        {/* Modal Penilaian */}
+        {showModal && (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+            <div className="bg-[#2b0000] rounded-2xl p-6 max-w-sm w-full text-center shadow-lg">
+              <h3 className="text-xl text-white font-bold mb-4">
+                Beri Rating Pesanan
+              </h3>
+
+              <div className="flex justify-center gap-2 mb-4">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <span
+                    key={star}
+                    className={`text-3xl cursor-pointer transition-all ${(hovered || userRating) >= star
+                        ? "text-yellow-400 scale-110"
+                        : "text-gray-600"
+                      }`}
+                    onMouseEnter={() => setHovered(star)}
+                    onMouseLeave={() => setHovered(0)}
+                    onClick={() => setUserRating(star)}
+                  >
+                    ★
+                  </span>
+                ))}
+              </div>
+
+              <button
+                onClick={handleSubmitRating}
+                disabled={userRating === 0}
+                className={`mt-2 px-4 py-2 rounded-xl font-semibold ${userRating === 0
+                    ? "bg-gray-500 cursor-not-allowed text-gray-200"
+                    : "bg-[#eeb626] hover:bg-[#d6a620] text-[#730302]"
+                  }`}
+              >
+                Kirim Rating
+              </button>
+
+              <button
+                onClick={() => setShowModal(false)}
+                className="block mx-auto mt-3 text-sm text-black hover:bg-gray-300"
+              >
+                Batal
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
 
       {/* Bagian Semua Testimoni */}
-        <h2 className="text-3xl font-bold text-white mb-3">Ulasan Pelanggan</h2>
+      <h2 className="text-3xl font-bold text-white mb-3">Ulasan Pelanggan</h2>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {testimonials.map((item) => {
-  const avatarUrl =
-    item.avatar ||
-    `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(
-      item.name || "Anonim"
-    )}&chars=1`;
+          const avatarUrl =
+            item.avatar ||
+            `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(
+              item.name || "Anonim"
+            )}&chars=1`;
 
-  return (
-    <div
-      key={item.id}
-      className="bg-gray-50/30 text-white p-6 rounded-2xl shadow-lg flex gap-10 hover:scale-105 transition-transform duration-300"
-    >
-      <img
-          src={avatarUrl}
-          alt={item.name || "User Avatar"}
-          className="w-16 h-16 rounded-full mb-3 border border-gray-300"
-        />
-      <div className="flex flex-col items-center mb-3">
-        <h4 className="text-center font-semibold">
-        {item.name || "Anonim"}
-      </h4>
-        <div className="flex justify-center mb-1">
-          {[...Array(5)].map((_, i) => (
-            <span
-              key={i}
-              className={`text-xl ${
-                i < item.rating ? "text-yellow-400" : "text-gray-600"
-              }`}
+          return (
+            <div
+              key={item.id}
+              className="bg-gray-50/30 text-white p-6 rounded-2xl shadow-lg flex gap-10 hover:scale-105 transition-transform duration-300"
             >
-              ★
-            </span>
-          ))}
-        </div>
+              <img
+                src={avatarUrl}
+                alt={item.name || "User Avatar"}
+                className="w-16 h-16 rounded-full mb-3 border border-gray-300"
+              />
+              <div className="flex flex-col items-center mb-3">
+                <h4 className="text-center font-semibold">
+                  {item.name || "Anonim"}
+                </h4>
+                <div className="flex justify-center mb-1">
+                  {[...Array(5)].map((_, i) => (
+                    <span
+                      key={i}
+                      className={`text-xl ${i < item.rating ? "text-yellow-400" : "text-gray-600"
+                        }`}
+                    >
+                      ★
+                    </span>
+                  ))}
+                </div>
 
-      <p className="italic text-lg text-center text-gray-300">
-        “{item.message}”
-      </p>
-      
-      </div>
+                <p className="italic text-lg text-center text-gray-300">
+                  “{item.message}”
+                </p>
 
-    </div>
-  );
-})}
+              </div>
+
+            </div>
+          );
+        })}
 
       </div>
     </div>

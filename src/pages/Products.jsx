@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import api from "../api/axios";
-import Layout from "../components/Layout/Layout";
 import ProductCard from "../components/ProductCard";
 
 export default function Products({ onAddToCart }) {
@@ -22,7 +21,7 @@ export default function Products({ onAddToCart }) {
   }, []);
 
   return (
-    <div className="flex flex-col gap-5 max-w-5xl mx-auto my-16">
+    <div className="flex flex-col gap-5 max-w-5xl mx-auto my-16 px-4 sm:px-6">
       <form className="w-full relative">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -46,25 +45,33 @@ export default function Products({ onAddToCart }) {
         />
       </form>
 
-      <div className="grid grid-cols-4 gap-6 bg-[#730302]">
-        {loading ? (
-          Array(4).fill(0).map((_, i) => (
-            <div key={i} className="border rounded-lg p-9 shadow animate-pulse">
-              <div className="h-40 w-full bg-gray-300 rounded-md mb-2"></div>
-              <div className="h-6 w-3/4 bg-gray-300 rounded mb-1"></div>
-              <div className="h-4 w-1/2 bg-gray-300 rounded"></div>
-              <div className="h-8 w-24 bg-gray-300 rounded mt-2"></div>
-            </div>
-          ))
-        ) : products.length > 0 ? (
-          products.map(product => (
-            <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} />
-          ))
-        ) : (
-          <p>No Products Found</p>
-        )}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 bg-[#730302] p-2 sm:p-4 rounded-xl">
+        {loading
+          ? Array(4)
+              .fill(0)
+              .map((_, i) => (
+                <div
+                  key={i}
+                  className="border rounded-lg p-6 shadow animate-pulse bg-white"
+                >
+                  <div className="h-40 w-full bg-gray-300 rounded-md mb-2"></div>
+                  <div className="h-6 w-3/4 bg-gray-300 rounded mb-1"></div>
+                  <div className="h-4 w-1/2 bg-gray-300 rounded"></div>
+                  <div className="h-8 w-24 bg-gray-300 rounded mt-2"></div>
+                </div>
+              ))
+          : products.length > 0
+          ? products.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onAddToCart={onAddToCart}
+              />
+            ))
+          : (
+            <p className="text-white text-center col-span-full">No Products Found</p>
+          )}
       </div>
     </div>
   );
 }
-

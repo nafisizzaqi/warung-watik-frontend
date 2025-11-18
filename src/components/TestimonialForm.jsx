@@ -19,34 +19,34 @@ export default function TestimonialForm({ onSubmitted }) {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (formData.rating === null || formData.rating === undefined || !formData.message.trim()) {
-    return toast.error("Isi rating dan pesan ya!");
-  }
+    if (formData.rating === null || formData.rating === undefined || !formData.message.trim()) {
+      return toast.error("Isi rating dan pesan ya!");
+    }
 
-  try {
-    setSubmitting(true);
+    try {
+      setSubmitting(true);
 
-    await api.post("/customer/testimonials", formData, {
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-    });
+      await api.post("/customer/testimonials", formData, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
 
-    onSubmitted(); // reload data di parent
-    setFormData({ name: "", rating: 0, message: "" });
+      onSubmitted(); // reload data di parent
+      setFormData({ name: "", rating: 0, message: "" });
 
-    toast.success("Terima kasih atas ulasannya 💖");
-  } catch (error) {
-    console.error(error);
-    const msg = error.response?.data?.message || "Gagal mengirim testimoni 😢";
-    toast.error(msg);
-  } finally {
-    setSubmitting(false);
-  }
-};
+      toast.success("Terima kasih atas ulasannya 💖");
+    } catch (error) {
+      console.error(error);
+      const msg = error.response?.data?.message || "Gagal mengirim testimoni 😢";
+      toast.error(msg);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-[#eeb626] text-white p-6 rounded-xl mt-8">
+    <form onSubmit={handleSubmit} className="bg-[#eeb626] text-white p-6 rounded-xl max-w-sm lg:max-w-md mt-8">
       <h2 className="text-xl font-semibold mb-4">Beri Testimoni</h2>
 
       <label className="block text-start mb-2">Nama</label>
@@ -65,7 +65,7 @@ export default function TestimonialForm({ onSubmitted }) {
             type="button"
             key={value}
             onClick={() => handleRating(value)}
-            className={`text-2xl ${value <= formData.rating ? "text-yellow-400" : "text-gray-500"}`}
+            className={`text-md lg:text-xl ${value <= formData.rating ? "text-yellow-400" : "text-gray-500"}`}
           >
             ★
           </button>

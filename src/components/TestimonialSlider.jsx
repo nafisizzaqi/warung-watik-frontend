@@ -34,7 +34,7 @@ export default function TestimonialSlider({ reloadTrigger }) {
     );
 
   return (
-    <div className="mt-10 w-full max-w-6xl mx-auto px-4 overflow-hidden">
+    <div className="mt-10 w-full max-w-6xl mx-auto px-0 lg:px-4 overflow-hidden">
       <h2 className="text-2xl text-white font-semibold text-center mb-6">
         Apa Kata Mereka
       </h2>

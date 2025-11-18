@@ -1,71 +1,77 @@
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import toast from 'react-hot-toast';
+import toast from "react-hot-toast";
 import api from "../api/axios";
 
 export default function OrderDetail() {
     const navigate = useNavigate();
-    const location = useLocation();
     const { id } = useParams();
 
     // Loading states
-    const [loadingOrder, setLoadingOrder] = useState(true); // skeleton
-    const [loadingCheckout, setLoadingCheckout] = useState(false); // checkout spinner
+    const [loadingOrder, setLoadingOrder] = useState(true);
+    const [loadingCheckout, setLoadingCheckout] = useState(false);
+
+    // Order & couriers
     const [order, setOrder] = useState(null);
+    const [couriers, setCouriers] = useState([]);
 
     // Form data
     const [shippingAddress, setShippingAddress] = useState("");
     const [paymentMethod, setPaymentMethod] = useState("");
     const [shipment, setShipment] = useState({ courier: "", service: "", cost: 0 });
-    const [couriers, setCouriers] = useState([]);
 
-    const readOnly = location.state?.readOnly || false;
-    const prePaymentMethod = location.state?.paymentMethod || "";
+    // Readonly state otomatis dari order.status
+    const [readOnly, setReadOnly] = useState(false);
 
-    // Fetch order & couriers
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const [orderRes, couriersRes] = await Promise.all([
-                    id ? api.get(`/customer/orders/${id}`) : Promise.resolve({ data: { data: location.state?.order || null } }),
-                    api.get("/customer/shipments/couriers")
+                    api.get(`/customer/orders/${id}`),
+                    api.get("/customer/shipments/couriers"),
                 ]);
-                setOrder(orderRes.data.data);
+
+                const fetchedOrder = orderRes.data.data;
+                setOrder(fetchedOrder);
                 setCouriers(couriersRes.data);
+
+                // Prefill form
+                setShippingAddress(fetchedOrder.shipping_address || "");
+                setPaymentMethod(fetchedOrder.payment_method || "");
+
+                const selectedCourier = couriersRes.data.find(c => c.courier === fetchedOrder.courier);
+                const selectedService = selectedCourier?.services?.find(s => s.code === fetchedOrder.service);
+
+                setShipment({
+                    courier: selectedCourier?.courier || "",
+                    service: selectedService?.code || "",
+                    cost: selectedService?.cost || 0,
+                });
+
+                // Tentukan readonly dari status order
+                setReadOnly(
+                    ["success", "ready", "cancel"].includes(fetchedOrder.status)
+                );
             } catch (err) {
                 console.error(err);
+                toast.error("Gagal memuat order");
             } finally {
                 setLoadingOrder(false);
             }
         };
         fetchData();
-    }, [id, location.state]);
-
-    // Sync form data
-    useEffect(() => {
-        if (order && couriers.length > 0) {
-            setShippingAddress(order.shipping_address || "");
-            setPaymentMethod(prePaymentMethod || order.payment_method || "");
-            setShipment({
-                courier: order.courier || "",
-                service: order.service || "",
-                cost: order.shipping_cost || 0
-            });
-        }
-    }, [order, couriers, prePaymentMethod]);
+    }, [id]);
 
     const selectedCourier = couriers.find(c => c.courier === shipment.courier);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
 
-        if (name === "service") {
+        if (name === "courier") {
+            setShipment({ courier: value, service: "", cost: 0 });
+        } else if (name === "service") {
             const service = selectedCourier?.services?.find(s => s.code === value);
             setShipment(prev => ({ ...prev, service: value, cost: service?.cost || 0 }));
-        } else if (name === "courier") {
-            setShipment(prev => ({ ...prev, courier: value, service: "", cost: 0 }));
-        } else {
-            setShipment(prev => ({ ...prev, [name]: value }));
         }
     };
 
@@ -85,7 +91,6 @@ export default function OrderDetail() {
 
         try {
             setLoadingCheckout(true);
-
             await updateOrderBeforePayment();
 
             if (paymentMethod === "midtrans") {
@@ -93,9 +98,19 @@ export default function OrderDetail() {
                 const snapToken = res.data.snap_token;
 
                 window.snap.pay(snapToken, {
-                    onSuccess: async () => {
-                        toast.success("Pembayaran berhasil!");
-                        navigate("/order-success", { state: { order } });
+                    onSuccess: async (result) => {
+                        await api.post(`/customer/orders/${order.id}/payment`, {
+                            transaction_status: result.transaction_status,
+                            payment_type: result.payment_type,
+                            transaction_id: result.transaction_id,
+                            gross_amount: result.gross_amount,
+                            shipping_cost: shipment.cost,
+                            courier: shipment.courier,
+                            service: shipment.service,
+                        });
+
+                        const updatedOrder = await api.get(`/customer/orders/${order.id}`);
+                        navigate("/order-success", { state: { order: updatedOrder.data.data } });
                     },
                     onPending: () => toast("Menunggu pembayaran..."),
                     onError: () => toast.error("Pembayaran gagal!"),
@@ -103,15 +118,16 @@ export default function OrderDetail() {
             }
 
             if (paymentMethod === "cash") {
-                await api.post(`/customer/orders/${order.id}/payment`, {
+                const res = await api.post(`/customer/orders/${order.id}/payment`, {
                     transaction_status: "settlement",
                     payment_type: "cash",
                     shipping_cost: shipment.cost || 0,
                     courier: shipment.courier,
                     service: shipment.service,
                 });
+                const updatedOrder = res.data.data; // pastikan backend return order terbaru
                 toast.success("Pesanan berhasil!");
-                navigate("/order-success", { state: { order } });
+                navigate("/order-success", { state: { order: updatedOrder } });
             }
         } catch (err) {
             console.error(err);
@@ -121,120 +137,85 @@ export default function OrderDetail() {
         }
     };
 
-    // Skeleton loading
     if (loadingOrder) return (
-        <div className="p-6 min-h-screen bg-[#730302] flex flex-col items-center">
-            <div className="w-64 h-64 bg-gray-700 rounded-lg animate-pulse mb-4"></div>
-            <div className="w-48 h-6 bg-gray-600 rounded animate-pulse mb-2"></div>
-            <div className="w-32 h-6 bg-gray-600 rounded animate-pulse"></div>
+        <div className="p-6 min-h-screen bg-[#730302] flex flex-col items-center justify-center">
+            <div className="w-48 h-48 bg-gray-700 rounded-lg animate-pulse mb-4"></div>
+            <div className="w-36 h-6 bg-gray-600 rounded animate-pulse mb-2"></div>
+            <div className="w-28 h-6 bg-gray-600 rounded animate-pulse"></div>
             <span className="text-white mt-4">Memuat detail pesanan...</span>
         </div>
     );
 
-    const firstItem = order.items?.[0] || [];
+    const firstItem = order.items?.[0] || {};
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-[#730302] text-white p-6">
-            {/* Loading overlay */}
+        <div className="flex flex-col items-center justify-center min-h-screen bg-[#730302] text-white p-4 sm:p-6">
             {loadingCheckout && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
                     <div className="w-16 h-16 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
                 </div>
             )}
 
-            <div className="bg-gray-50/10 backdrop-blur-md rounded-3xl w-full max-w-6xl shadow-xl overflow-hidden">
+            <div className="bg-gray-50/10 backdrop-blur-md rounded-3xl w-full max-w-4xl shadow-xl overflow-hidden">
                 {/* Header */}
                 <div className="flex items-center justify-between bg-[#eeb626] px-4 py-3">
-                    <button onClick={() => navigate("/profile")} className="text-black bg-[#eeb626] hover:text-white hover:border-none border-none transition-colors">
+                    <button onClick={() => navigate("/profile")} className="text-black bg-[#eeb626] border-none hover:border-none hover:text-white transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-6 h-6">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
                         </svg>
                     </button>
-                    <h2 className="text-xl font-bold text-white flex-1 text-center">Detail Pesanan</h2>
+                    <h2 className="text-lg sm:text-xl font-bold text-white flex-1 text-center">Detail Pesanan</h2>
                     <div className="w-6"></div>
                 </div>
 
                 {/* Content */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 p-6">
-                    {/* Kolom 1: Image */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4">
                     {firstItem.product && (
-                        <div className="md:col-span-2 flex items-center justify-center">
-                            <img
-                                src={`http://localhost:8000/storage/${firstItem.product.image}`}
-                                alt={firstItem.product.name || "Produk"}
-                                className="w-full max-h-[400px] object-cover rounded-2xl shadow-md"
-                            />
+                        <div className="md:col-span-2 flex items-center justify-center mb-4 md:mb-0">
+                            <img src={`http://localhost:8000/storage/${firstItem.product.image}`} alt={firstItem.product.name || "Produk"} className="w-full max-h-[300px] object-cover rounded-2xl shadow-md" />
                         </div>
                     )}
 
-                    {/* Kolom 2: Detail Produk */}
-                    <div className="md:col-span-1 bg-white/20 backdrop-blur-sm p-4 rounded-2xl shadow-md flex flex-col justify-start">
-                        <h3 className="text-xl font-bold mb-4 text-white">Detail Produk</h3>
+                    <div className="md:col-span-1 bg-white/20 backdrop-blur-sm p-4 rounded-2xl shadow-md flex flex-col justify-start mb-4 md:mb-0">
+                        <h3 className="text-lg font-bold mb-2 text-white">Detail Produk</h3>
                         <p><b>Nama:</b> {firstItem.product.name}</p>
                         <p><b>Kategori:</b> {firstItem.product.category?.name || "-"}</p>
                         <p><b>Deskripsi:</b> {firstItem.product.description}</p>
                         <p><b>Jumlah:</b> {firstItem.quantity || 0}</p>
-                        <p><b>Subtotal:</b> Rp {parseFloat(firstItem.subtotal || 0).toLocaleString("id-ID")}</p>
-
-                        <div className="mt-10">
+                        <p><b>Subtotal:</b> Rp {(firstItem.subtotal || 0).toLocaleString("id-ID")}</p>
+                        <div className="mt-4">
                             <p><b>Nomor Antrean:</b> #{order.queue_number}</p>
-                            <p><b>Total:</b> Rp {parseFloat(order.grand_total || 0).toLocaleString("id-ID")}</p>
+                            <p><b>Total:</b> Rp {(order.grand_total || 0).toLocaleString("id-ID")}</p>
                         </div>
                     </div>
 
-                    {/* Kolom 3: Form / Checkout */}
+                    {/* Form */}
                     <div className="md:col-span-1 bg-white/20 backdrop-blur-sm p-4 rounded-2xl shadow-md flex flex-col justify-between">
                         <div>
-                            <div className="mt-4">
+                            <div className="mt-2">
                                 <label className="block mb-1 text-white">Kurir</label>
-                                <select
-                                    name="courier"
-                                    value={shipment.courier}
-                                    onChange={handleInputChange}
-                                    className="w-full rounded px-3 py-2 text-black"
-                                    disabled={readOnly}
-                                >
+                                <select name="courier" value={shipment.courier} onChange={handleInputChange} disabled={readOnly} className="w-full rounded px-3 py-2 text-black">
                                     <option value="">Pilih kurir</option>
-                                    {couriers.map(c => (
-                                        <option key={c.courier} value={c.courier}>{c.courier.toUpperCase()}</option>
-                                    ))}
+                                    {couriers.map(c => <option key={c.courier} value={c.courier}>{c.courier.toUpperCase()}</option>)}
                                 </select>
                             </div>
 
-                            <div className="mt-4">
+                            <div className="mt-2">
                                 <label className="block mb-1 text-white">Service</label>
-                                <select
-                                    name="service"
-                                    value={shipment.service}
-                                    onChange={handleInputChange}
-                                    className="w-full rounded px-3 py-2 text-black"
-                                    disabled={!shipment.courier || readOnly}
-                                >
+                                <select name="service" value={shipment.service} onChange={handleInputChange} disabled={!shipment.courier || readOnly} className="w-full rounded px-3 py-2 text-black">
                                     <option value="">Pilih service</option>
-                                    {selectedCourier?.services?.map(s => (
-                                        <option key={s.code} value={s.code}>{s.label} — Rp {(s.cost ?? 0).toLocaleString("id-ID")}</option>
-                                    ))}
+                                    {selectedCourier?.services?.map(s => <option key={s.code} value={s.code}>{s.label} — Rp {(s.cost ?? 0).toLocaleString("id-ID")}</option>)}
                                 </select>
                             </div>
 
-                            <div className="mt-4">
+                            <div className="mt-2">
                                 <label className="block mb-1 text-white">Alamat Pengiriman</label>
-                                <input
-                                    className="w-full rounded px-3 py-2 text-black"
-                                    value={shippingAddress}
-                                    onChange={e => setShippingAddress(e.target.value)}
-                                    disabled={readOnly}
-                                />
+                                <input value={shippingAddress} onChange={(e) => setShippingAddress(e.target.value)} disabled={readOnly} className="w-full rounded px-3 py-2 text-black" />
                             </div>
 
-                            <div className="mt-4">
+                            <div className="mt-2">
                                 <label className="block mb-1 text-white">Metode Pembayaran</label>
-                                <select
-                                    className="w-full rounded px-3 py-2 text-black"
-                                    value={paymentMethod}
-                                    onChange={e => setPaymentMethod(e.target.value)}
-                                    disabled={prePaymentMethod === "cash" || readOnly}
-                                >
+                                <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} disabled={readOnly} className="w-full rounded px-3 py-2 text-black">
                                     <option value="">Pilih metode</option>
                                     <option value="midtrans">Midtrans</option>
                                     <option value="cash">Bayar di tempat / tunai</option>
@@ -243,11 +224,7 @@ export default function OrderDetail() {
                         </div>
 
                         {!readOnly && (
-                            <button
-                                onClick={handleCheckout}
-                                disabled={loadingCheckout}
-                                className="mt-4 w-full bg-[#eeb626] text-white py-3 rounded-full font-semibold hover:bg-yellow-500 transition-colors"
-                            >
+                            <button onClick={handleCheckout} disabled={loadingCheckout} className="mt-4 w-full bg-[#eeb626] text-white py-3 rounded-full font-semibold hover:bg-yellow-500 transition-colors">
                                 {loadingCheckout ? "Memproses..." : "Bayar Sekarang"}
                             </button>
                         )}

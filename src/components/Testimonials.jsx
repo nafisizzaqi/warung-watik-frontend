@@ -10,11 +10,15 @@ export default function Testimonials() {
   };
 
   return (
-    <div className="container mx-8">
-      <div className="flex py-10 min-h-screen gap-32">
-      <TestimonialForm onSubmitted={handleSubmitted} />
-      <TestimonialSlider reloadTrigger={reloadTrigger} />
-    </div>
+    <div className="container mx-auto px-4 overflow-x-hidden">
+      <div className="flex flex-col sm:flex-row py-10 min-h-screen gap-10 sm:gap-32">
+        <div className="w-full sm:w-1/3">
+          <TestimonialForm onSubmitted={handleSubmitted} />
+        </div>
+        <div className="w-full sm:w-2/3">
+          <TestimonialSlider reloadTrigger={reloadTrigger} />
+        </div>
+      </div>
     </div>
   );
 }
