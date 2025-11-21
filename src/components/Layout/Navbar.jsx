@@ -118,7 +118,7 @@ export default function Navbar({ user, onLogout, onCartClick }) {
       {/* PROFILE BUTTON */}
       <div className={`hidden md:flex fixed z-50 items-center transition-all duration-500 ${isScrolled ? "top-4 right-4" : "top-6 right-6"}`}>
         <div className="relative">
-          <button onClick={() => setProfileOpen(!profileOpen)} className="flex items-center gap-2 text-[#eeb626]">
+          <button onClick={() => setProfileOpen(!profileOpen)} className="flex items-center bg-white gap-2 text-[#eeb626]">
             <FaUserCircle size={30} />
             <span className="hidden md:inline font-semibold">{user?.name}</span>
           </button>

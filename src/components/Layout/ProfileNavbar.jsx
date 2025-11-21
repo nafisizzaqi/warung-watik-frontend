@@ -89,7 +89,7 @@ export default function ProfileNavbar({ user, onLogout, onCartClick, children })
                 setMenuOpen(false);
                 onCartClick && onCartClick();
               }}
-              className="flex items-center gap-2 text-[#eeb626] appearance-none focus:outline-none hover:text-white text-lg hover:bg-[#eeb626] px-3 py-2 border border-white hover:border-white rounded-md transition"
+              className="flex items-center gap-2 bg-white text-[#eeb626] appearance-none focus:outline-none hover:text-white text-lg hover:bg-[#eeb626] px-3 py-2 border border-white hover:border-white rounded-md transition"
             >
               <FaShoppingCart /> Keranjang
             </button>
@@ -105,7 +105,7 @@ export default function ProfileNavbar({ user, onLogout, onCartClick, children })
                   setTransitioning(false);      // matikan animasi
                 }, 1500); // durasi sesuai animasi
               }}
-              className="flex items-center gap-2 text-[#eeb626] appearance-none focus:outline-none hover:text-white text-lg hover:bg-[#eeb626] px-3 py-2 border border-white hover:border-white rounded-md transition"
+              className="flex items-center gap-2 bg-white text-[#eeb626] appearance-none focus:outline-none hover:text-white text-lg hover:bg-[#eeb626] px-3 py-2 border border-white hover:border-white rounded-md transition"
             >
               <FaSignOutAlt />Logout
             </button>

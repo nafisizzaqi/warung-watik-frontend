@@ -55,7 +55,7 @@ export default function TestimonialForm({ onSubmitted }) {
         name="name"
         value={formData.name}
         onChange={handleChange}
-        className="w-full mb-4 p-2 rounded bg-white border border-[#eeb626] focus:border-[#eeb626] appearance-none text-[#eeb626]"
+        className="w-full mb-4 p-2 rounded bg-white border border-[#eeb626] focus:border-[#eeb626] appearance-none text-black"
       />
 
       <label className="block text-start mb-2">Rating</label>
@@ -65,7 +65,7 @@ export default function TestimonialForm({ onSubmitted }) {
             type="button"
             key={value}
             onClick={() => handleRating(value)}
-            className={`text-md lg:text-xl ${value <= formData.rating ? "text-yellow-400" : "text-gray-500"}`}
+            className={`text-md lg:text-xl bg-white ${value <= formData.rating ? "text-yellow-400" : "text-gray-500"}`}
           >
             ★
           </button>
@@ -78,7 +78,7 @@ export default function TestimonialForm({ onSubmitted }) {
         value={formData.message}
         onChange={handleChange}
         rows="4"
-        className="w-full mb-4 p-2 rounded text-[#eeb626] bg-white border border-[#eeb626]"
+        className="w-full mb-4 p-2 rounded text-black bg-white border border-[#eeb626]"
       ></textarea>
 
       <button

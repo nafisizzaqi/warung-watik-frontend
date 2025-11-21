@@ -87,55 +87,85 @@ export default function OrderDetail() {
 
     const handleCheckout = async () => {
         if (!shippingAddress || !paymentMethod) return toast.error("Alamat dan metode pembayaran harus diisi!");
+        if (!["midtrans", "stripe", "cash"].includes(paymentMethod)) {
+            return toast.error("Metode pembayaran tidak valid!");
+        }
         if (!shipment.courier || !shipment.service) return toast.error("Kurir dan service harus diisi!");
 
-        try {
-            setLoadingCheckout(true);
-            await updateOrderBeforePayment();
+        setLoadingCheckout(true);
+        await updateOrderBeforePayment();
 
-            if (paymentMethod === "midtrans") {
-                const res = await api.post(`/customer/orders/${order.id}/midtrans/snap-token`);
-                const snapToken = res.data.snap_token;
+        if (paymentMethod === "midtrans") {
+            const { data } = await api.post(`/customer/orders/${order.id}/midtrans/snap-token`);
+            const snapToken = data.snap_token;
 
-                window.snap.pay(snapToken, {
-                    onSuccess: async (result) => {
-                        await api.post(`/customer/orders/${order.id}/payment`, {
-                            transaction_status: result.transaction_status,
-                            payment_type: result.payment_type,
-                            transaction_id: result.transaction_id,
-                            gross_amount: result.gross_amount,
-                            shipping_cost: shipment.cost,
-                            courier: shipment.courier,
-                            service: shipment.service,
-                        });
+            // Jangan matikan loading di finally, matikan setelah modal closed
+            window.snap.pay(snapToken, {
+                onSuccess: async (result) => {
+                    await api.post(`/customer/orders/${order.id}/payment`, {
+                        transaction_status: result.transaction_status,
+                        payment_type: result.payment_type,
+                        transaction_id: result.transaction_id,
+                        gross_amount: result.gross_amount,
+                        shipping_cost: shipment.cost,
+                        courier: shipment.courier,
+                        service: shipment.service,
+                    });
 
-                        const updatedOrder = await api.get(`/customer/orders/${order.id}`);
-                        navigate("/order-success", { state: { order: updatedOrder.data.data } });
-                    },
-                    onPending: () => toast("Menunggu pembayaran..."),
-                    onError: () => toast.error("Pembayaran gagal!"),
-                });
+                    const updatedOrder = await api.get(`/customer/orders/${order.id}`);
+                    setLoadingCheckout(false);
+                    navigate("/order-success", { state: { order: updatedOrder.data.data } });
+                },
+                onPending: () => {
+                    toast("Menunggu pembayaran...");
+                    setLoadingCheckout(false);
+                },
+                onError: () => {
+                    toast.error("Pembayaran gagal!");
+                    setLoadingCheckout(false);
+                },
+                onClose: () => {
+                    // user nutup popup tapi ga bayar
+                    setLoadingCheckout(false);
+                }
+            });
+
+            return; // Stop execution so finally{} ga jalan
+        }
+
+        if (paymentMethod === "stripe") {
+            try {
+                const { data } = await api.post(`/customer/orders/${order.id}/stripe-checkout`);
+                const stripe = Stripe("pk_test_51SVPmZKTjV2bK2v7BvQd7gNj8yEe4kdjvaOrlLwkyPpDfZ4nNUIIugYMfs6DwASM88PjBEwlPGTJS2rmum7yhSkB00SmJ4GkNP");
+
+                // redirect ke Stripe Checkout
+                const { error } = await stripe.redirectToCheckout({ sessionId: data.id });
+                if (error) toast.error(error.message);
+            } catch (err) {
+                console.error(err);
+                toast.error("Gagal membuat Stripe Checkout");
+            } finally {
+                setLoadingCheckout(false);
             }
+            return;
+        }
 
-            if (paymentMethod === "cash") {
-                const res = await api.post(`/customer/orders/${order.id}/payment`, {
-                    transaction_status: "settlement",
-                    payment_type: "cash",
-                    shipping_cost: shipment.cost || 0,
-                    courier: shipment.courier,
-                    service: shipment.service,
-                });
-                const updatedOrder = res.data.data; // pastikan backend return order terbaru
-                toast.success("Pesanan berhasil!");
-                navigate("/order-success", { state: { order: updatedOrder } });
-            }
-        } catch (err) {
-            console.error(err);
-            toast.error("Checkout gagal!");
-        } finally {
+        // Case pembayaran cash
+        if (paymentMethod === "cash") {
+            const res = await api.post(`/customer/orders/${order.id}/payment`, {
+                transaction_status: "settlement",
+                payment_type: "cash",
+                shipping_cost: shipment.cost || 0,
+                courier: shipment.courier,
+                service: shipment.service,
+            });
+
+            toast.success("Pesanan berhasil!");
+            navigate("/order-success", { state: { order: res.data.data } });
             setLoadingCheckout(false);
         }
     };
+
 
     if (loadingOrder) return (
         <div className="p-6 min-h-screen bg-[#730302] flex flex-col items-center justify-center">
@@ -194,7 +224,7 @@ export default function OrderDetail() {
                         <div>
                             <div className="mt-2">
                                 <label className="block mb-1 text-white">Kurir</label>
-                                <select name="courier" value={shipment.courier} onChange={handleInputChange} disabled={readOnly} className="w-full rounded px-3 py-2 text-black">
+                                <select name="courier" value={shipment.courier} onChange={handleInputChange} disabled={readOnly} className="w-full rounded px-3 py-2 text-black bg-white">
                                     <option value="">Pilih kurir</option>
                                     {couriers.map(c => <option key={c.courier} value={c.courier}>{c.courier.toUpperCase()}</option>)}
                                 </select>
@@ -202,7 +232,7 @@ export default function OrderDetail() {
 
                             <div className="mt-2">
                                 <label className="block mb-1 text-white">Service</label>
-                                <select name="service" value={shipment.service} onChange={handleInputChange} disabled={!shipment.courier || readOnly} className="w-full rounded px-3 py-2 text-black">
+                                <select name="service" value={shipment.service} onChange={handleInputChange} disabled={!shipment.courier || readOnly} className="w-full rounded px-3 py-2 text-black bg-white">
                                     <option value="">Pilih service</option>
                                     {selectedCourier?.services?.map(s => <option key={s.code} value={s.code}>{s.label} — Rp {(s.cost ?? 0).toLocaleString("id-ID")}</option>)}
                                 </select>
@@ -210,14 +240,15 @@ export default function OrderDetail() {
 
                             <div className="mt-2">
                                 <label className="block mb-1 text-white">Alamat Pengiriman</label>
-                                <input value={shippingAddress} onChange={(e) => setShippingAddress(e.target.value)} disabled={readOnly} className="w-full rounded px-3 py-2 text-black" />
+                                <input value={shippingAddress} onChange={(e) => setShippingAddress(e.target.value)} disabled={readOnly} className="w-full rounded px-3 py-2 text-black bg-white" />
                             </div>
 
                             <div className="mt-2">
                                 <label className="block mb-1 text-white">Metode Pembayaran</label>
-                                <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} disabled={readOnly} className="w-full rounded px-3 py-2 text-black">
+                                <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} disabled={readOnly} className="w-full rounded px-3 py-2 text-black bg-white">
                                     <option value="">Pilih metode</option>
                                     <option value="midtrans">Midtrans</option>
+                                    <option value="stripe">Stripe</option>
                                     <option value="cash">Bayar di tempat / tunai</option>
                                 </select>
                             </div>

@@ -46,12 +46,9 @@ export default function Testimonial() {
     fetchRating();
   }, []);
 
-  // Saat user menilai
   const handleSubmitRating = async () => {
     try {
       await api.post("/customer/ratings", { rating: userRating });
-
-      // Update rata-rata secara lokal (simulasi real-time)
       const newTotal = totalReviews + 1;
       const newAverage =
         (averageRating * totalReviews + userRating) / newTotal;
@@ -65,8 +62,28 @@ export default function Testimonial() {
     }
   };
 
-  if (loading)
-    return <p className="text-center text-white">Loading testimonials...</p>;
+  // **Skeleton untuk loading**
+  if (loading) {
+    return (
+      <div className="w-full max-w-6xl mx-auto px-4 mt-10 mb-20 animate-pulse">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map((_, i) => (
+            <div
+              key={i}
+              className="bg-gray-700/50 rounded-2xl p-6 flex gap-4 h-48"
+            >
+              <div className="w-16 h-16 rounded-full bg-gray-600" />
+              <div className="flex-1 flex flex-col justify-between">
+                <div className="h-5 bg-gray-600 rounded w-1/2 mb-2" />
+                <div className="h-4 bg-gray-600 rounded w-1/3 mb-1" />
+                <div className="h-10 bg-gray-600 rounded w-full" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (!testimonials.length)
     return (
@@ -78,25 +95,21 @@ export default function Testimonial() {
   return (
     <div className="w-full max-w-6xl mx-auto px-4 mt-10 mb-20">
       {/* Bagian Statistik Rating */}
-
       <div className="mb-10">
-        {/* Header logo & info */}
         <div className="bg-gray-50/30 rounded-full max-w-md mx-auto px-6 py-1 flex items-center gap-2">
           <img className="w-20 h-20" src="/logo.png" alt="Logo" />
-
           <div className="flex flex-col">
             <h2 className="text-xl font-bold text-white mb-1">
               Warung Mbak Watik
             </h2>
-
             <div className="flex items-center gap-2">
               <div className="flex gap-1">
                 {[...Array(5)].map((_, i) => (
                   <span
                     key={i}
                     className={`text-xl ${i < Math.round(averageRating)
-                        ? "text-yellow-400"
-                        : "text-gray-500"
+                      ? "text-yellow-400"
+                      : "text-gray-500"
                       }`}
                   >
                     ★
@@ -110,13 +123,8 @@ export default function Testimonial() {
           </div>
         </div>
 
-        {/* Card untuk rating dan tombol */}
         <div className="bg-gray-50/30 max-w-sm mx-auto rounded-md mt-3 p-5">
-          <p className="text-gray-200 mb-3">
-            Pengalaman Keseluruhan
-          </p>
-
-          {/* Tambahan rata-rata rating */}
+          <p className="text-gray-200 mb-3">Pengalaman Keseluruhan</p>
           <div className="flex justify-start items-center mb-3">
             <p className="text-gray-300 text-6xl ml-2">
               {averageRating.toFixed(1)}
@@ -140,22 +148,19 @@ export default function Testimonial() {
           </button>
         </div>
 
-
-        {/* Modal Penilaian */}
         {showModal && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
             <div className="bg-[#2b0000] rounded-2xl p-6 max-w-sm w-full text-center shadow-lg">
               <h3 className="text-xl text-white font-bold mb-4">
                 Beri Rating Pesanan
               </h3>
-
               <div className="flex justify-center gap-2 mb-4">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <span
                     key={star}
                     className={`text-3xl cursor-pointer transition-all ${(hovered || userRating) >= star
-                        ? "text-yellow-400 scale-110"
-                        : "text-gray-600"
+                      ? "text-yellow-400 scale-110"
+                      : "text-gray-600"
                       }`}
                     onMouseEnter={() => setHovered(star)}
                     onMouseLeave={() => setHovered(0)}
@@ -170,8 +175,8 @@ export default function Testimonial() {
                 onClick={handleSubmitRating}
                 disabled={userRating === 0}
                 className={`mt-2 px-4 py-2 rounded-xl font-semibold ${userRating === 0
-                    ? "bg-gray-500 cursor-not-allowed text-gray-200"
-                    : "bg-[#eeb626] hover:bg-[#d6a620] text-[#730302]"
+                  ? "bg-gray-500 cursor-not-allowed text-gray-200"
+                  : "bg-[#eeb626] hover:bg-[#d6a620] text-[#730302]"
                   }`}
               >
                 Kirim Rating
@@ -188,10 +193,8 @@ export default function Testimonial() {
         )}
       </div>
 
-
       {/* Bagian Semua Testimoni */}
       <h2 className="text-3xl font-bold text-white mb-3">Ulasan Pelanggan</h2>
-
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {testimonials.map((item) => {
           const avatarUrl =
@@ -225,17 +228,13 @@ export default function Testimonial() {
                     </span>
                   ))}
                 </div>
-
                 <p className="italic text-lg text-center text-gray-300">
                   “{item.message}”
                 </p>
-
               </div>
-
             </div>
           );
         })}
-
       </div>
     </div>
   );

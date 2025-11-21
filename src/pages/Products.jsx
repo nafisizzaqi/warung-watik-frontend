@@ -41,7 +41,7 @@ export default function Products({ onAddToCart }) {
         <input
           type="text"
           placeholder="Cari Menu"
-          className="w-full pl-12 p-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-600"
+          className="w-full pl-12 p-3 rounded-full border bg-white border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-600"
         />
       </form>
 
