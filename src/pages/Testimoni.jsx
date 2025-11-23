@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../api/axios";
+import TestimonialForm from "../components/TestimonialForm";
 
 export default function Testimonial() {
   const [testimonials, setTestimonials] = useState([]);
@@ -10,25 +11,26 @@ export default function Testimonial() {
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchTestimonials = async () => {
-      try {
-        const res = await api.get("/customer/testimonials");
-        const data = res.data?.data ?? [];
-        setTestimonials(data);
 
-        if (data.length > 0) {
-          const total = data.reduce((sum, t) => sum + (t.rating || 0), 0);
-          setTotalReviews(data.length);
-          setAverageRating(total / data.length);
-        }
-      } catch (err) {
-        console.error("Error loading testimonials:", err);
-      } finally {
-        setLoading(false);
+  const fetchTestimonials = async () => {
+    try {
+      const res = await api.get("/customer/testimonials");
+      const data = res.data?.data ?? [];
+      setTestimonials(data);
+
+      if (data.length > 0) {
+        const total = data.reduce((sum, t) => sum + (t.rating || 0), 0);
+        setTotalReviews(data.length);
+        setAverageRating(total / data.length);
       }
-    };
-
+    } catch (err) {
+      console.error("Error loading testimonials:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  useEffect(() => {
     fetchTestimonials();
   }, []);
 
@@ -150,38 +152,13 @@ export default function Testimonial() {
 
         {showModal && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-            <div className="bg-[#2b0000] rounded-2xl p-6 max-w-sm w-full text-center shadow-lg">
-              <h3 className="text-xl text-white font-bold mb-4">
-                Beri Rating Pesanan
-              </h3>
-              <div className="flex justify-center gap-2 mb-4">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <span
-                    key={star}
-                    className={`text-3xl cursor-pointer transition-all ${(hovered || userRating) >= star
-                      ? "text-yellow-400 scale-110"
-                      : "text-gray-600"
-                      }`}
-                    onMouseEnter={() => setHovered(star)}
-                    onMouseLeave={() => setHovered(0)}
-                    onClick={() => setUserRating(star)}
-                  >
-                    ★
-                  </span>
-                ))}
-              </div>
-
-              <button
-                onClick={handleSubmitRating}
-                disabled={userRating === 0}
-                className={`mt-2 px-4 py-2 rounded-xl font-semibold ${userRating === 0
-                  ? "bg-gray-500 cursor-not-allowed text-gray-200"
-                  : "bg-[#eeb626] hover:bg-[#d6a620] text-[#730302]"
-                  }`}
-              >
-                Kirim Rating
-              </button>
-
+            <div className="bg-[#2b0000] rounded-2xl p-6 max-w-lg w-full text-center shadow-lg">
+              <TestimonialForm
+                onSubmitted={() => {
+                  fetchTestimonials(); // reload data
+                  setShowModal(false); // otomatis tutup modal
+                }}
+              />
               <button
                 onClick={() => setShowModal(false)}
                 className="block mx-auto mt-3 text-sm text-black hover:bg-gray-300"

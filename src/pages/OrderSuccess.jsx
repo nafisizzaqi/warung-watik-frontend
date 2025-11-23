@@ -22,8 +22,42 @@ export default function OrderSuccess() {
     }
   }, [order, sessionId]);
 
-  if (loading) return <div>Memuat...</div>;
-  if (!order) return <div>Order tidak ditemukan.</div>;
+  const formatRupiah = (value) => {
+    return Number(value || 0).toLocaleString("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 2,
+    });
+  };
+
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-[#730302] p-6">
+      <div className="w-64 h-64 rounded-full bg-gray-700/50 animate-pulse mb-6"></div>
+      <div className="w-48 h-6 bg-gray-600 rounded animate-pulse mb-2"></div>
+      <div className="w-32 h-6 bg-gray-600 rounded animate-pulse mb-2"></div>
+      <div className="flex items-center mt-4">
+        <div className="w-6 h-6 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin mr-3"></div>
+        <span className="text-white text-lg font-medium">Memuat detail pesanan...</span>
+      </div>
+    </div>
+  );
+  if (!order) return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-[#730302] p-6">
+      <div className="w-24 h-24 flex items-center justify-center rounded-full bg-red-600/70 mb-4">
+        <span className="text-white text-3xl font-bold">!</span>
+      </div>
+      <h2 className="text-white text-2xl font-bold mb-2">Order Tidak Ditemukan</h2>
+      <p className="text-gray-300 text-center mb-6">
+        Pesanan yang kamu cari tidak ada atau mungkin sudah dihapus.
+      </p>
+      <button
+        onClick={() => navigate("/products")}
+        className="bg-[#eeb626] text-white py-3 px-6 rounded-full font-semibold hover:bg-yellow-500 transition-colors"
+      >
+        Kembali ke Produk
+      </button>
+    </div>
+  );
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-[#730302] text-white p-6">
@@ -56,16 +90,16 @@ export default function OrderSuccess() {
             <span className="text-2xl text-white">Rangkayan Pembayaran</span>
             <div className="flex justify-between">
               <span>Subtotal:</span>
-              <span>Rp {(order?.total_amount ?? 0).toLocaleString("id-ID")}</span>
+              <span>{formatRupiah(order?.total_amount)}</span>
             </div>
             <div className="flex justify-between">
               <span>Ongkir:</span>
-              <span>Rp {(order.shipping_cost || 0).toLocaleString("id-ID")}</span>
+              <span>{formatRupiah(order.shipping_cost)}</span>
             </div>
             <div className="flex justify-between font-bold text-lg">
               <span>Total:</span>
               <span className="text-[#eeb626]">
-                Rp {(order?.grand_total ?? 0).toLocaleString("id-ID")}
+                {formatRupiah(order?.grand_total)}
               </span>
             </div>
 

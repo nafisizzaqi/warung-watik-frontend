@@ -41,7 +41,7 @@ export default function Navbar({ user, onLogout, onCartClick }) {
         className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 
         ${isScrolled
             ? "bg-[#eeb626] w-full h-20 shadow-md px-4"
-            : "bg-[#eeb626]/80 backdrop-blur-md w-[75%] h-20 mx-auto mt-2 rounded-full px-4 shadow-xl"
+            : "bg-[#eeb626]/80 backdrop-blur-md w-[70%] h-20 mx-auto mt-2 rounded-full px-4 shadow-xl"
           }`}
       >
         <div className="flex items-center justify-between h-full mx-0 lg:mx-8">

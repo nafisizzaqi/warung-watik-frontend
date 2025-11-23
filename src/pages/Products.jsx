@@ -5,24 +5,47 @@ import ProductCard from "../components/ProductCard";
 export default function Products({ onAddToCart }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
 
+  // state untuk menyimpan timeout debounce
+  const [debounceTimeout, setDebounceTimeout] = useState(null);
+
+  const fetchProducts = async (keyword = "") => {
+    setLoading(true);
+    try {
+      const res = await api.get("/customer/products", {
+        params: { search: keyword },
+      });
+      setProducts(res.data.data ?? []);
+    } catch (err) {
+      console.error("Error fetch products:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // useEffect untuk fetch pertama kali
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const res = await api.get("/customer/products");
-        setProducts(res.data.data ?? []);
-      } catch (err) {
-        console.error("Error fetch products:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchProducts();
   }, []);
 
+  // handle change input dengan debounce
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearch(value);
+
+    if (debounceTimeout) clearTimeout(debounceTimeout);
+
+    setDebounceTimeout(
+      setTimeout(() => {
+        fetchProducts(value);
+      }, 500) // tunggu 500ms baru fetch
+    );
+  };
+
   return (
     <div className="flex flex-col gap-5 max-w-5xl mx-auto my-16 px-4 sm:px-6">
-      <form className="w-full relative">
+      <form className="w-full relative" onSubmit={(e) => e.preventDefault()}>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
@@ -41,36 +64,38 @@ export default function Products({ onAddToCart }) {
         <input
           type="text"
           placeholder="Cari Menu"
-          className="w-full pl-12 p-3 rounded-full border bg-white border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-600"
+          value={search}
+          onChange={handleSearchChange}
+          className="w-full pl-12 p-3 text-black rounded-full border bg-white border-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-600"
         />
       </form>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 bg-[#730302] p-2 sm:p-4 rounded-xl">
         {loading
           ? Array(4)
-              .fill(0)
-              .map((_, i) => (
-                <div
-                  key={i}
-                  className="border rounded-lg p-6 shadow animate-pulse bg-white"
-                >
-                  <div className="h-40 w-full bg-gray-300 rounded-md mb-2"></div>
-                  <div className="h-6 w-3/4 bg-gray-300 rounded mb-1"></div>
-                  <div className="h-4 w-1/2 bg-gray-300 rounded"></div>
-                  <div className="h-8 w-24 bg-gray-300 rounded mt-2"></div>
-                </div>
-              ))
+            .fill(0)
+            .map((_, i) => (
+              <div
+                key={i}
+                className="border rounded-lg p-6 shadow animate-pulse bg-white"
+              >
+                <div className="h-40 w-full bg-gray-300 rounded-md mb-2"></div>
+                <div className="h-6 w-3/4 bg-gray-300 rounded mb-1"></div>
+                <div className="h-4 w-1/2 bg-gray-300 rounded"></div>
+                <div className="h-8 w-24 bg-gray-300 rounded mt-2"></div>
+              </div>
+            ))
           : products.length > 0
-          ? products.map((product) => (
+            ? products.map((product) => (
               <ProductCard
                 key={product.id}
                 product={product}
                 onAddToCart={onAddToCart}
               />
             ))
-          : (
-            <p className="text-white text-center col-span-full">No Products Found</p>
-          )}
+            : (
+              <p className="text-white text-center col-span-full">No Products Found</p>
+            )}
       </div>
     </div>
   );

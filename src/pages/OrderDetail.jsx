@@ -99,7 +99,6 @@ export default function OrderDetail() {
             const { data } = await api.post(`/customer/orders/${order.id}/midtrans/snap-token`);
             const snapToken = data.snap_token;
 
-            // Jangan matikan loading di finally, matikan setelah modal closed
             window.snap.pay(snapToken, {
                 onSuccess: async (result) => {
                     await api.post(`/customer/orders/${order.id}/payment`, {
@@ -125,20 +124,16 @@ export default function OrderDetail() {
                     setLoadingCheckout(false);
                 },
                 onClose: () => {
-                    // user nutup popup tapi ga bayar
                     setLoadingCheckout(false);
                 }
             });
-
-            return; // Stop execution so finally{} ga jalan
+            return;
         }
 
         if (paymentMethod === "stripe") {
             try {
                 const { data } = await api.post(`/customer/orders/${order.id}/stripe-checkout`);
                 const stripe = Stripe("pk_test_51SVPmZKTjV2bK2v7BvQd7gNj8yEe4kdjvaOrlLwkyPpDfZ4nNUIIugYMfs6DwASM88PjBEwlPGTJS2rmum7yhSkB00SmJ4GkNP");
-
-                // redirect ke Stripe Checkout
                 const { error } = await stripe.redirectToCheckout({ sessionId: data.id });
                 if (error) toast.error(error.message);
             } catch (err) {
@@ -150,7 +145,6 @@ export default function OrderDetail() {
             return;
         }
 
-        // Case pembayaran cash
         if (paymentMethod === "cash") {
             const res = await api.post(`/customer/orders/${order.id}/payment`, {
                 transaction_status: "settlement",
@@ -166,17 +160,25 @@ export default function OrderDetail() {
         }
     };
 
+    const formatRupiah = (value) => {
+        return Number(value || 0).toLocaleString("id-ID", {
+            style: "currency",
+            currency: "IDR",
+            minimumFractionDigits: 2,
+        });
+    };
 
     if (loadingOrder) return (
         <div className="p-6 min-h-screen bg-[#730302] flex flex-col items-center justify-center">
             <div className="w-48 h-48 bg-gray-700 rounded-lg animate-pulse mb-4"></div>
             <div className="w-36 h-6 bg-gray-600 rounded animate-pulse mb-2"></div>
-            <div className="w-28 h-6 bg-gray-600 rounded animate-pulse"></div>
+            <div className="w-28 h-6 bg-gray-600 rounded"></div>
             <span className="text-white mt-4">Memuat detail pesanan...</span>
         </div>
     );
 
-    const firstItem = order.items?.[0] || {};
+    const totalItems = order.items.reduce((sum, i) => sum + (i.subtotal || 0), 0);
+    console.log("Order detail:", order);
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-[#730302] text-white p-4 sm:p-6">
@@ -186,42 +188,39 @@ export default function OrderDetail() {
                 </div>
             )}
 
-            <div className="bg-gray-50/10 backdrop-blur-md rounded-3xl w-full max-w-4xl shadow-xl overflow-hidden">
+            <div className="bg-gray-50/10 backdrop-blur-md rounded-3xl w-full max-w-6xl shadow-xl overflow-hidden">
                 {/* Header */}
                 <div className="flex items-center justify-between bg-[#eeb626] px-4 py-3">
                     <button onClick={() => navigate("/profile")} className="text-black bg-[#eeb626] border-none hover:border-none hover:text-white transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-6 h-6">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
-                        </svg>
+                        ←
                     </button>
                     <h2 className="text-lg sm:text-xl font-bold text-white flex-1 text-center">Detail Pesanan</h2>
                     <div className="w-6"></div>
                 </div>
 
-                {/* Content */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4">
-                    {firstItem.product && (
-                        <div className="md:col-span-2 flex items-center justify-center mb-4 md:mb-0">
-                            <img src={`http://localhost:8000/storage/${firstItem.product.image}`} alt={firstItem.product.name || "Produk"} className="w-full max-h-[300px] object-cover rounded-2xl shadow-md" />
-                        </div>
-                    )}
-
-                    <div className="md:col-span-1 bg-white/20 backdrop-blur-sm p-4 rounded-2xl shadow-md flex flex-col justify-start mb-4 md:mb-0">
-                        <h3 className="text-lg font-bold mb-2 text-white">Detail Produk</h3>
-                        <p><b>Nama:</b> {firstItem.product.name}</p>
-                        <p><b>Kategori:</b> {firstItem.product.category?.name || "-"}</p>
-                        <p><b>Deskripsi:</b> {firstItem.product.description}</p>
-                        <p><b>Jumlah:</b> {firstItem.quantity || 0}</p>
-                        <p><b>Subtotal:</b> Rp {(firstItem.subtotal || 0).toLocaleString("id-ID")}</p>
-                        <div className="mt-4">
-                            <p><b>Nomor Antrean:</b> #{order.queue_number}</p>
-                            <p><b>Total:</b> Rp {(order.grand_total || 0).toLocaleString("id-ID")}</p>
-                        </div>
+                <div className="flex flex-col md:flex-row p-4">
+                    {/* LEFT: Produk */}
+                    <div className="md:w-2/3 p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {order.items.map(item => (
+                            <div key={item.id} className="bg-white/20 backdrop-blur-sm p-4 rounded-2xl shadow-md flex flex-col">
+                                <img src={`http://localhost:8000/storage/${item.product.image}`} alt={item.product.name || "Produk"} className="w-full max-h-[200px] object-cover rounded-2xl shadow-md mb-2" />
+                                <h3 className="text-lg font-bold mb-1 text-white">{item.product.name}</h3>
+                                <p className="text-left"><b>Kategori:</b> {item.product.category?.name || "-"}</p>
+                                <p className="text-left"><b>Deskripsi:</b> {item.product.description}</p>
+                                <p className="text-left"><b>Jumlah:</b> {item.quantity || 0}</p>
+                                <p className="text-left"><b>Subtotal:</b> {formatRupiah(item.subtotal)}</p>
+                            </div>
+                        ))}
                     </div>
 
-                    {/* Form */}
-                    <div className="md:col-span-1 bg-white/20 backdrop-blur-sm p-4 rounded-2xl shadow-md flex flex-col justify-between">
+                    {/* RIGHT: Form */}
+                    <div className="md:w-1/3 bg-white/20 backdrop-blur-sm p-4 rounded-2xl shadow-md flex flex-col justify-between">
                         <div>
+                            <div className="mb-2">
+                                <p><b>Total Semua Item:</b> {formatRupiah(totalItems)}</p>
+                                <p><b>Nomor Antrean:</b> #{order.queue_number}</p>
+                            </div>
+
                             <div className="mt-2">
                                 <label className="block mb-1 text-white">Kurir</label>
                                 <select name="courier" value={shipment.courier} onChange={handleInputChange} disabled={readOnly} className="w-full rounded px-3 py-2 text-black bg-white">
@@ -234,7 +233,7 @@ export default function OrderDetail() {
                                 <label className="block mb-1 text-white">Service</label>
                                 <select name="service" value={shipment.service} onChange={handleInputChange} disabled={!shipment.courier || readOnly} className="w-full rounded px-3 py-2 text-black bg-white">
                                     <option value="">Pilih service</option>
-                                    {selectedCourier?.services?.map(s => <option key={s.code} value={s.code}>{s.label} — Rp {(s.cost ?? 0).toLocaleString("id-ID")}</option>)}
+                                    {selectedCourier?.services?.map(s => <option key={s.code} value={s.code}>{s.label} — {formatRupiah(s.cost)}</option>)}
                                 </select>
                             </div>
 

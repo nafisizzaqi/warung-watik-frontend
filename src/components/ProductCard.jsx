@@ -24,6 +24,14 @@ export default function ProductCard({ product, onAddToCart }) {
     }
   };
 
+  const formatRupiah = (value) => {
+    return Number(value || 0).toLocaleString("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 2,
+    });
+  };
+
   return (
     <div className="bg-gray-50/20 rounded-lg p-4 shadow hover:shadow-lg transition flex flex-col items-center">
       <div className="flex justify-center w-full">
@@ -48,7 +56,7 @@ export default function ProductCard({ product, onAddToCart }) {
         </span>
       </p>
 
-      <p className="text-[#eeb626] font-bold mt-1">Rp {product.price}</p>
+      <p className="text-[#eeb626] font-bold mt-1">{formatRupiah(product.price)}</p>
 
       <button
         disabled={isOutOfStock}

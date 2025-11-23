@@ -9,20 +9,42 @@ export default function Cart({ isOpen, onClose, cart = [], loading = false }) {
   const [shippingAddress, setShippingAddress] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [loadingCheckout, setLoadingCheckout] = useState(false);
+  const [cartItems, setCartItems] = useState(cart);
 
   const navigate = useNavigate();
 
-  // Dummy function untuk increment & remove
+  useEffect(() => {
+    setCartItems(cart); // update ketika props cart berubah
+  }, [cart]);
+
   const increment = (item) => {
-    console.log("Increment qty:", item);
-    // nanti bisa ditambah logika update cart
-  };
-  const removeItem = (item) => {
-    console.log("Remove item:", item);
-    // nanti bisa ditambah logika update cart
+    setCartItems(prevCart =>
+      prevCart.map(ci =>
+        ci.id === item.id
+          ? {
+            ...ci,
+            quantity: (ci.quantity || 1) + 1,
+            // price tetap harga satuan, jangan kalikan quantity
+            price: ci.product.price
+          }
+          : ci
+      )
+    );
   };
 
-  const subtotal = cart.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 0)), 0);
+  const removeItem = async (item) => {
+    try {
+      await api.delete(`/customer/cart/items/${item.id}`);
+      // update state lokal setelah berhasil hapus di server
+      setCartItems(prevCart => prevCart.filter(ci => ci.id !== item.id));
+      toast.success("Item berhasil dihapus dari keranjang");
+    } catch (err) {
+      console.error("Gagal menghapus item:", err);
+      toast.error("Gagal menghapus item, coba lagi");
+    }
+  };
+
+  const subtotal = cartItems.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 0)), 0);
   const discount = 0;
   const total = subtotal - discount;
 
@@ -41,9 +63,14 @@ export default function Cart({ isOpen, onClose, cart = [], loading = false }) {
 
     try {
       const orderRes = await api.post("/customer/orders", {
-        shipping_address: null,
-        payment_method: null,
+        shipping_address: shippingAddress,
+        payment_method: paymentMethod,
         shipping_cost: 0,
+        items: cartItems.map(item => ({
+          product_id: item.product.id,
+          quantity: item.quantity,
+          price: item.product.price, // optional kalau backend perlu
+        })),
       });
 
       const order = orderRes.data.data;
@@ -63,6 +90,14 @@ export default function Cart({ isOpen, onClose, cart = [], loading = false }) {
     } finally {
       setLoadingCheckout(false);
     }
+  };
+
+  const formatRupiah = (value) => {
+    return Number(value || 0).toLocaleString("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 2,
+    });
   };
 
   return (
@@ -96,10 +131,10 @@ export default function Cart({ isOpen, onClose, cart = [], loading = false }) {
             </div>
           ) : (
             <div className="space-y-4">
-              {cart.map((item) => (
+              {cartItems.map((item) => (
                 <div key={item.id} className="bg-gray-50/30 p-1.5 rounded-3xl">
                   <div className="grid grid-cols-3 items-center p-3 border rounded-3xl hover:shadow-md bg-gray-50/30 border-none">
-                    <div className="">
+                    <div>
                       <img
                         src={`http://localhost:8000/storage/${item.product?.image || "placeholder.png"}`}
                         alt={item.product?.name || "Unnamed product"}
@@ -108,15 +143,11 @@ export default function Cart({ isOpen, onClose, cart = [], loading = false }) {
                     </div>
                     <div className="flex flex-col gap-2">
                       <span className="block font-semibold text-xl text-white text-left">{item.product?.name || "Unnamed product"}</span>
-                      <span className="text-[#eeb626] font-semibold">
-                        Rp {(item.price || 0).toLocaleString("id-ID")}
-                      </span>
+                      <span className="text-[#eeb626] font-semibold">{formatRupiah(item.price)}</span>
                     </div>
                     <div className="flex flex-col items-center gap-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-white bg-gray-50/30 rounded-full w-10 h-10 flex items-center justify-center">
-                          {item.quantity || 1}x
-                        </span>
+                        <span className="text-white bg-gray-50/30 rounded-full w-10 h-10 flex items-center justify-center">{item.quantity || 1}x</span>
                         <button
                           className="flex items-center justify-center bg-gray-50/30 text-white rounded-full w-10 h-10"
                           onClick={() => increment(item)}
@@ -124,9 +155,12 @@ export default function Cart({ isOpen, onClose, cart = [], loading = false }) {
                           +
                         </button>
                       </div>
-                      <span className="text-gray-50/50 cursor-pointer text-lg" onClick={() => removeItem(item)}>
+                      <button
+                        className="text-sm mt-1 bg-none border-none"
+                        onClick={() => removeItem(item)}
+                      >
                         Hapus
-                      </span>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -141,15 +175,11 @@ export default function Cart({ isOpen, onClose, cart = [], loading = false }) {
               <div className="flex flex-col gap-2 mb-3 mt-3">
                 <div className="flex justify-between text-gray-800">
                   <span className="text-white">Subtotal</span>
-                  <span className="text-white">Rp {subtotal.toLocaleString("id-ID")}</span>
-                </div>
-                <div className="flex justify-between text-gray-800">
-                  <span className="text-white">Diskon</span>
-                  <span className="text-white">Rp 0</span>
+                  <span className="text-white">{formatRupiah(subtotal)}</span>
                 </div>
                 <div className="flex justify-between font-bold text-lg">
                   <span className="text-white">Total Bayar</span>
-                  <span className="text-[#eeb626]">Rp {total.toLocaleString("id-ID")}</span>
+                  <span className="text-[#eeb626]">{formatRupiah(total)}</span>
                 </div>
               </div>
               <button
@@ -157,7 +187,7 @@ export default function Cart({ isOpen, onClose, cart = [], loading = false }) {
                 className="w-full py-3 bg-[#eeb626] text-white font-semibold rounded-full"
                 disabled={loadingCheckout}
               >
-                {loadingCheckout ? "Memproses..." : "Bayar Sekarang"}
+                {loadingCheckout ? "Memproses..." : "Bayar"}
               </button>
               <div className="flex justify-end mb-3 mt-3">
                 <label className="flex items-center gap-2 cursor-pointer">

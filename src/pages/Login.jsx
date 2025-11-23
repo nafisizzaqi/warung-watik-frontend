@@ -30,7 +30,7 @@ export default function Login({ onLogin }) {
       toast.success("Login Berhasil");
 
       if (onLogin) onLogin();
-      setTransitionText("Selamat datang 😄");
+      setTransitionText("Selamat datang");
       setTransitioning(true);
 
       // Navigasi saat animasi masih berjalan

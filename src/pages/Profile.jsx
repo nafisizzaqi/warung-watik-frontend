@@ -49,6 +49,14 @@ export default function Profile() {
     }, 1500);
   };
 
+  const formatRupiah = (value) => {
+    return Number(value || 0).toLocaleString("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 2,
+    });
+  };
+
   // Filter status orders
   const incomingOrders = orders.filter((o) => o.status === "pending");
   const processingOrders = orders.filter((o) => o.status === "processing");
@@ -179,13 +187,13 @@ export default function Profile() {
 
               <div className="flex justify-between text-xs sm:text-sm text-gray-300 mt-2">
                 <span>{new Date(order.created_at).toLocaleDateString("id-ID")}</span>
-                <span>Total: Rp {(order.total ?? 0).toLocaleString("id-ID")}</span>
+                <span>Total: {formatRupiah(order.total )}</span>
               </div>
 
               {/* Tombol lihat pesanan */}
               <div className="mt-3 w-full flex justify-end">
                 <button
-                  onClick={() => handleNavWithTransition(`/order-detail/${order.id}`, `Order #${order.queue_number}`, order)}
+                  onClick={() => handleNavWithTransition(`/order-detail/${order.id}`, `${order.queue_number}`, order)}
                   className="bg-[#eeb626] hover:bg-[#d6a620] text-[#730302] font-semibold px-3 sm:px-4 py-2 rounded-xl w-full sm:w-auto transition-all"
                 >
                   Lihat Pesanan
